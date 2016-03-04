@@ -7,9 +7,9 @@ We would like to integrate all existing features available on the PS3 Scene like
 
 ## Current functionality
 ### General
-- Support on custom firmware with cobra feature enabled (ver 4.46-4.76 CEX & DEX)
-- Support on classic custom firmware with PRXLoader (ver 3.41-4.76 CEX & DEX) *https://github.com/NzV/PRX_Loader*
-- Support on classic custom firmware with Mamba PRXLoader (ver 3.41-4.76 CEX & DEX) *https://github.com/NzV/MAMBA_PRX_Loader*
+- Support on custom firmware with cobra feature enabled (ver 4.46-4.78 CEX & DEX)
+- Support on classic custom firmware with PRXLoader (ver 3.41-4.78 CEX & DEX) *https://github.com/NzV/PRX_Loader*
+- Support on classic custom firmware with Mamba PRXLoader (ver 3.41-4.78 CEX & DEX) *https://github.com/NzV/MAMBA_PRX_Loader*
 - All PS3 Models with downgrade compatibility is supported, see *http://www.psdevwiki.com/ps3/SKU_Models*
 
 ### webMAN vanilla features
@@ -31,7 +31,7 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Title ID can be displayed on XMB menu
 - Covers are shown using the Title ID on the file name of the ISO. Official needs to mount the game to show the covers.
 - It can rip a game from disc to hdd0 or copy from hdd0 to usb000 or from usb00x to hdd0.
-- FTP includes new SITE commands to allow copy/paste files locally, unmount game, toggle external gamedata, turn on/off dev_blind, change file attributes
+- FTP server includes new SITE commands to allow copy/paste files locally, unmount game, toggle external gamedata, turn on/off dev_blind, change file attributes
 - Integrated external gameDATA
 - Web Debugger (remote peek/poke/find bytes)
 - Spoof IDPS/PSID and display IDPS/PSID on /cpursx.ps3
@@ -59,7 +59,8 @@ We would like to integrate all existing features available on the PS3 Scene like
 - VSH Menu for webMAN now can be installed optionally (Holding R1 when launching the Updater)
 - Added /play.ps3 to launch XMB Functions (e.g: /play.ps3?col=network&seg=seg_premo) <- this will start Remote Play server from XMB.
 - Once a game is mounted via html, if you click on the displayed icon the game will be launched on the PS3. This is nice to start the game once it's mounted from your mobile This option uses the new command /play.ps3
-- support for auto-play /BDISO and /DVDISO
+- Support for auto-play /BDISO and /DVDISO
+- NETISO server on PS3 (ISO only)
 
 ## How to build
 Requirements for Windows:

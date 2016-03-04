@@ -904,7 +904,7 @@ again3:
 
 	sys_addr_t sysmem = 0;
 
-	u8 is_binary = 0, served=0;	// served http requests
+	u8 is_binary = 0, served=0;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	u64 c_len = 0;
 	char cmd[16], header[HTML_RECV_SIZE];
 
@@ -992,7 +992,6 @@ again3:
 				param[pos] = NULL;
 			}
 
-			//if(param[0] != '/') goto respond_error;
 			if(islike(param, "/setup.ps3")) goto html_response;
 
  #ifdef VIRTUAL_PAD
@@ -1023,12 +1022,9 @@ again3:
 			if(islike(param, "/cpursx_ps3"))
 			{
 				char *cpursx = header; get_cpursx(cpursx);
-
 				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
-								"%s"
-								"<a href=\"/cpursx.ps3\" target=\"_parent\" style=\"text-decoration:none;\">"
-								"<font color=\"#fff\">%s</a>",
-								"/cpursx_ps3", HTML_BODY, cpursx);
+								"<script>parent.document.getElementById('lbl_cpursx').innerHTML = \"%s\";</script>",
+								"/cpursx_ps3", cpursx);
 
 				sprintf(header, HTML_RESPONSE_FMT,
 								200, "/cpursx_ps3", 390 + strlen(param), HTML_HEADER, param, HTML_BODY_END);
@@ -1268,7 +1264,9 @@ again3:
 				return;
 			}
 #endif
+
 #ifndef LITE_EDITION
+
  #ifdef WEB_CHAT
 			if(islike(param, "/chat.ps3"))
 			{
@@ -1282,7 +1280,6 @@ again3:
 				is_binary = 0;
 				goto html_response;
 			}
-
 			if(islike(param, "/remap.ps3") || islike(param, "/unmap.ps3"))
 			{
 				char *pos, *path1 = header, *path2 = header + MAX_PATH_LEN, *url = header + 2 * MAX_PATH_LEN, *title = header + 2 * MAX_PATH_LEN;
@@ -1328,7 +1325,6 @@ again3:
 				sys_ppu_thread_exit(0);
 				return;
 			}
-
 			if(islike(param, "/dev_blind"))
 			{
 				is_binary = 2;
@@ -1403,7 +1399,8 @@ again3:
 				sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
 				goto html_response;
 			}
-  #endif
+ #endif
+
 #endif //#ifndef LITE_EDITION
 
 			if(islike(param, "/quit.ps3"))
@@ -1604,7 +1601,6 @@ mobile_response:
 					is_binary=(cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 				}
 
-//respond_error:
 				if(is_binary)
 				{
 					c_len=buf.st_size;
@@ -1757,16 +1753,16 @@ html_response:
 						char cpursx[32]; get_cpursx(cpursx);
 
 						sprintf(templn, " [<a href=\"/cpursx.ps3\" style=\"text-decoration:none;\">"
-										"<span id=\"ifrm_err\" style=\"display:none\">%s&nbsp;</span>%s</a>]"
+                                        "<span id=\"lbl_cpursx\">%s</span><iframe src=\"/cpursx_ps3\" style=\"display:none;\" onload=\"no_error(this)\"></iframe></span></a>]"
 										"<script>function no_error(ifrm){try{var doc=ifrm.contentDocument||ifrm.contentWindow.document;}catch(e){ifrm_err.style.display='inline-block';ifrm.style.display='none';}}</script>"
 										"<hr width=\"100%%\">"
 										"<div id=\"rxml\"><H1>%s XML ...</H1></div>"
 										"<div id=\"rhtm\"><H1>%s HTML ...</H1></div>"
 #ifdef COPY_PS3
 										"<div id=\"rcpy\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
-										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
+                                        "<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
 #else
-										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
+                                        "<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
 #endif
 					}
 
@@ -2423,7 +2419,6 @@ end:
 	sclose(&list_s);
 	sys_ppu_thread_exit(0);
 }
-
 
 int wwwd_start(uint64_t arg)
 {
