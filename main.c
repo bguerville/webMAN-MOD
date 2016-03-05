@@ -1753,8 +1753,7 @@ html_response:
 						char cpursx[32]; get_cpursx(cpursx);
 
 						sprintf(templn, " [<a href=\"/cpursx.ps3\" style=\"text-decoration:none;\">"
-                                        "<span id=\"lbl_cpursx\">%s</span><iframe src=\"/cpursx_ps3\" style=\"display:none;\" onload=\"no_error(this)\"></iframe></span></a>]"
-										"<script>function no_error(ifrm){try{var doc=ifrm.contentDocument||ifrm.contentWindow.document;}catch(e){ifrm_err.style.display='inline-block';ifrm.style.display='none';}}</script>"
+                                        "<span id=\"lbl_cpursx\">%s</span></a>]<iframe src=\"/cpursx_ps3\" style=\"display:none;\"></iframe>"
 										"<hr width=\"100%%\">"
 										"<div id=\"rxml\"><H1>%s XML ...</H1></div>"
 										"<div id=\"rhtm\"><H1>%s HTML ...</H1></div>"
