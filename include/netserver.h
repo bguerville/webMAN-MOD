@@ -361,7 +361,7 @@ static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
 	struct CellFsStat st;
 	netiso_stat_result result;
 
-	if(cellFsStat(filepath, &st) != CELL_FS_SUCCEEDED)
+	if (file_exists(filepath) == false && !strstr(filepath, "/is_ps3_compat1/") && !strstr(filepath, "/is_ps3_compat2/"))
 	{
 		result.file_size = (int64_t)(-1);
 	}

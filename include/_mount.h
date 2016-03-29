@@ -2411,12 +2411,11 @@ copy_ps2iso_to_hdd0:
 							{
 								char *buf=(char*)buf1; uint64_t msiz = 0;
 								cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-								cellFsRead(fdw, (void *)buf, 65500, &msiz);
+								cellFsRead(fdw, (void *)buf, 65535, &msiz);
 								cellFsClose(fdw);
 
 								if(msiz>10)
 								{
-
 									TrackDef tracks[32];
 									tracks[0].lba = 0;
 									tracks[0].is_audio = 0;
@@ -2877,11 +2876,13 @@ exit_mount:
 #endif
 
 #ifdef COBRA_ONLY
+	if((extgd==0) && isDir("/dev_bdvd/GAMEI")) set_gamedata_status(2, true); // auto-enable external gameDATA (if GAMEI exists on /bdvd)
+
 	{
 		if(ret && (strstr(_path, ".PUP.ntfs[BD") || file_exists("/dev_bdvd/PS3UPDAT.PUP")))
 			sys_map_path((char*)"/dev_bdvd/PS3/UPDATE", (char*)"/dev_bdvd"); //redirect root of bdvd to /dev_bdvd/PS3/UPDATE
 
-		if(ret && (islike(_path, "/net") && file_exists("/dev_bdvd/PKG")))
+		if(ret && (islike(_path, "/net") && isDir("/dev_bdvd/PKG")))
 			sys_map_path((char*)"/app_home", (char*)"/dev_bdvd/PKG"); //redirect net_host/PKG to app_home
 
 		{sys_map_path((char*)"/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder

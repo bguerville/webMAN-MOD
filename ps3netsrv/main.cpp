@@ -23,6 +23,8 @@
 
 #define MIN(a, b)	((a) <= (b) ? (a) : (b))
 
+//#define MERGE_DRIVES 1
+
 enum
 {
 	VISO_NONE,
@@ -249,6 +251,7 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 #ifdef WIN32
+	#ifdef MERGE_DRIVES
 	int pos = strlen(p) - 1; if(pos > 0 && p[pos] == '/') p[pos] = 0;
 
 	file_stat_t st;
@@ -271,6 +274,7 @@ static char *translate_path(char *path, int del, int *viso)
 			if (stat_file(p, &st) >= 0) break;
 		}
 	}
+	#endif
 #endif
 
 	if(!strstr(p, ".PNG"))
@@ -1151,6 +1155,7 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 	}
 
 #ifdef WIN32
+	#ifdef MERGE_DRIVES
 	if(root_len > 2 && dirpath_len > (root_len + 1) && strncmp(client->dirpath, root_directory, root_len) == 0)
 	{
 		memmove(client->dirpath + 2, client->dirpath + root_len, strlen(client->dirpath + root_len) + 1);
@@ -1221,11 +1226,12 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 					if(dir_size > MAX_ENTRIES) break;
 				}
 			}
-
-			if(client->dir) {closedir(client->dir); client->dir = NULL;}
 		}
 	}
+	#endif
 #endif
+
+	if(client->dir) {closedir(client->dir); client->dir = NULL;}
 
 send_result_read_dir_cmd:
 

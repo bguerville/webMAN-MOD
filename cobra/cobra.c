@@ -909,8 +909,7 @@ int cobra_mount_psx_disc_image(char *file, TrackDef *tracks, unsigned int num_tr
 {
 	ScsiTrackDescriptor scsi_tracks[32];
 
-	if (!file || num_tracks > 32)
-		return EINVAL;
+	if (!file || num_tracks > 32) return EINVAL;
 
 	memset(scsi_tracks, 0, sizeof(scsi_tracks));
 
@@ -1873,8 +1872,6 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		// Wait 0.5 seconds for automounter to mount iso
 		for (i = 0; i < 25; i++)
 		{
-			CellFsStat stat;
-
 			if (cellFsStat("/dev_bdvd", &stat) == CELL_FS_SUCCEEDED)
 			{
 				break;

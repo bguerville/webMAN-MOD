@@ -52,7 +52,7 @@ static char h2a(char hex)
 static void urlenc(char *dst, char *src, u8 rel_mode)
 {
 	size_t j=0;
-    size_t n=strlen(src);
+	size_t n=strlen(src);
 	for(size_t i=0; i<n; i++,j++)
 	{
 		     if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
@@ -63,7 +63,11 @@ static void urlenc(char *dst, char *src, u8 rel_mode)
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]==34) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '2';}
+		else if(src[i]=='"') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '2';}
+		else if(src[i]=='%') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '5';}
+		else if(src[i]=='&') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '6';}
+		else if(src[i]=='+') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = 'B';}
+		else if(src[i]=='?') {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'F';}
 		else if(gmobile_mode && src[i]==0x27) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '7';}
 		else dst[j] = src[i];
 	}
