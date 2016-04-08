@@ -183,7 +183,7 @@ static void poll_thread(uint64_t poll)
 
 					old_fan=fan_speed;
 					fan_control(fan_speed, 0);
-					show_msg((char*)STR_OVERHEAT2);
+					if(!webman_config->warn) show_msg((char*)STR_OVERHEAT2);
 				}
 			}
 		}

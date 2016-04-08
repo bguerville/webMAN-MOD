@@ -65,10 +65,10 @@ static void add_launchpad_entry(char *tempstr, char *icon, char *templn, char *u
 		cellFsWrite(fd, tempstr, size, &size);
 
 		// add countries
-		char country[40][3] = {"at", "au", "be", "bg", "br", "ca", "ch", "cl", "cy", "cz", "de", "dk", "es", "fi", "fr", "gb", "gr", "hk", "hu", "ie", "is", "it", "jp", "lu", "mt", "mx", "my", "nl", "no", "nz", "pe", "pl", "pt", "ru", "se", "sg", "sk", "tr", "tw", "us"};
+		char country[71][3] = {"ar","at","au","be","bg","bh","bo","br","ca","ch","cl","cn","co","cr","cy","cz","de","dk","ec","es","fi","fr","gb","gr","gt","hk","hn","hr","hu","id","ie","il","in","is","it","jp","kr","kw","lb","lu","mt","mx","my","ni","nl","no","nz","om","pa","pe","ph","pl","pt","py","qa","ro","ru","sa","se","sg","si","sk","sv","th","tr","tw","ua","um","us","uy","za"};
 
 		memset(tempstr, 0, _2KB_); u32 offset = 0;
-		for(u8 c = 0; c < 40; c++)
+		for(u8 c = 0; c < 71; c++)
 		{
 			sprintf(icon, "<cntry agelmt=\"0\">%s</cntry>", country[c]); strcat(tempstr + offset, icon); offset += strlen(icon);
 		}

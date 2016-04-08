@@ -19,25 +19,22 @@
 
 	<View id="seg_webman_links_items">
 		<Items>
-			<Query class="type:x-xmb/folder-pixmap" key="webman_setup_link" src="#seg_webman_setup"/>
-			<Query class="type:x-xmb/folder-pixmap" key="webman_unmount_link" src="#seg_webman_unmount"/>
-
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost_link" src="#seg_webman_nethost_links"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_restart" src="#seg_webman_restart"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_refresh_xml_link" src="#seg_webman_refresh_xml"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_refresh_html_link" src="#seg_webman_refresh_html"/>
-
-			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_cpursx" src="#seg_webman_cpursx"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_games_link" src="#seg_webman_games"/>
-			<Query class="type:x-xmb/folder-pixmap" key="webman_files_link" src="#seg_webman_files"/>
-			<Query class="type:x-xmb/folder-pixmap" key="webman_cache_link" src="#seg_webman_cache"/>
-
-			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost_link" src="#seg_webman_nethost_links"/>
-
 			<Query class="type:x-xmb/folder-pixmap" key="webman_gamedata_link" src="#seg_webman_gamedata"/>
-			
+			<Query class="type:x-xmb/folder-pixmap" key="webman_eject_link" src="#seg_webman_eject"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_insert_link" src="#seg_webman_insert"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_unload" src="#seg_webman_unload"/>
-
-			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_restart" src="#seg_webman_restart"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_unmount_link" src="#seg_webman_unmount"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_cpursx" src="#seg_webman_cpursx"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_setup_link" src="#seg_webman_setup"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_files_link" src="#seg_webman_files"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_system_files_link" src="#seg_webman_system_files"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_cache_link" src="#seg_webman_cache"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_cacheremove_link" src="#seg_webman_cacheremove"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_prepare_ntfs" src="xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId BLES80616"/>
 		</Items>
 	</View>
@@ -49,7 +46,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Сетевые папки</String></Pair>
-				<Pair key="info"><String>Монтирование сетевых /nethost папок в виде привода /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтирование сетевых '/nethost' папок в виде привода '/dev_bdvd'</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
 		</Attributes>
@@ -63,16 +60,16 @@
 			<Query class="type:x-xmb/folder-pixmap" key="nethost_links0" attr="nethost_links0" src="#seg_webman_nethost_links_items0"/>
 			<Query class="type:x-xmb/folder-pixmap" key="nethost_links1" attr="nethost_links1" src="#seg_webman_nethost_links_items1"/>
 			<Query class="type:x-xmb/folder-pixmap" key="nethost_links2" attr="nethost_links2" src="#seg_webman_nethost_links_items2"/>
-			<Query class="type:x-xmb/folder-pixmap" key="seg_webman_system"  src="#seg_webman_system_files"/>
 		</Items>
 	</View>
 
 	<View id="seg_webman_system_files">
 		<Attributes>
 			<Table key="webman_system_files">
-				<Pair key="icon_rsc"><String>tex_album_icon</String></Pair>
-				<Pair key="icon_notation"><String>WNT_XmbItemAlbum</String></Pair>
-				<Pair key="title"><String>Системные файлы</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/devflash.png</String></Pair>
+				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
+				<Pair key="title"><String>Файл-менеджер</String></Pair>
+				<Pair key="info"><String>Просмотр и удаление файлов PS3 в XMB</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
 		</Attributes>
@@ -85,7 +82,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Сетевые папки /net0</String></Pair>
-				<Pair key="info"><String>Монтировать /net0 как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0' как '/dev_bdvd'</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
 		</Attributes>
@@ -100,7 +97,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Сетевые папки /net1</String></Pair>
-				<Pair key="info"><String>Монтировать /net1 как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1' как '/dev_bdvd'</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
 		</Attributes>
@@ -115,7 +112,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Сетевые папки /net2</String></Pair>
-				<Pair key="info"><String>Монтировать /net2 как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2' как '/dev_bdvd'</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
 		</Attributes>
@@ -165,8 +162,8 @@
 		<Attributes>
 			<Table key="webman_refresh_xml">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
-				<Pair key="title"><String>Обновить 'Мои игры'</String></Pair>
-				<Pair key="info"><String>Обновить список игр в XMB после перезагрузки [Select+R3]</String></Pair>
+				<Pair key="title"><String>Обновить меню 'Игры'</String></Pair>
+				<Pair key="info"><String>Обновить список игр в XMB, потребуется перезагрузка [Select+R3]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/refresh.ps3</String></Pair>
 			</Table>
@@ -179,8 +176,8 @@
 		<Attributes>
 			<Table key="webman_refresh_html">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
-				<Pair key="title"><String>Обновить 'Мои игры' [Web-браузер]</String></Pair>
-				<Pair key="info"><String>Обновить список игр в браузере без перезагрузки</String></Pair>
+				<Pair key="title"><String>Обновить меню 'Игры' [Web-браузер]</String></Pair>
+				<Pair key="info"><String>Обновить список игр в браузере, перезагрузка не требуется</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/index.ps3?html</String></Pair>
 			</Table>
@@ -221,7 +218,7 @@
 		<Attributes>
 			<Table key="webman_files">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
-				<Pair key="title"><String>Файл-менеджер</String></Pair>
+				<Pair key="title"><String>Файл-менеджер [Web-браузер]</String></Pair>
 				<Pair key="info"><String>Просмотр файлов PS3 в Web-браузере</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/</String></Pair>
@@ -235,7 +232,7 @@
 		<Attributes>
 			<Table key="seg_webman_cache">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
-				<Pair key="title"><String>Кэш</String></Pair>
+				<Pair key="title"><String>Временные файлы</String></Pair>
 				<Pair key="info"><String>Просмотр и удаление временных файлов из /dev_hdd0/tmp/wmtmp</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
@@ -244,6 +241,19 @@
 	</View>
 
 	<View id="seg_webman_cache_files"><Items><Query class="type:x-xmb/folder-pixmap" key="seg_webman_cache_files" src="host://localhost/dev_hdd0/tmp/wmtmp"/></Items></View>
+
+	<!-- Main > webMAN > PS3 webMAN [CacheRemove] -->
+	<View id="seg_webman_cacheremove">
+		<Attributes>
+			<Table key="webman_cacheremove">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
+				<Pair key="title"><String>Удаление временных файлов</String></Pair>
+				<Pair key="info"><String>Папка /dev_hdd0/tmp/wmtmp будет полностью очищена</String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/delete.ps3?wmtmp</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_cacheremove" attr="webman_cacheremove"/></Items></View>
 
 	<!-- Main > webMAN > PS3 webMAN [Setup] -->
 	<View id="seg_webman_setup">
@@ -265,7 +275,7 @@
 			<Table key="webman_nethost0">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net0</String></Pair>
-				<Pair key="info"><String>Монтировать /net0 как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/.</String></Pair>
 			</Table>
@@ -279,7 +289,7 @@
 			<Table key="webman_nethost0_pkg">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
-				<Pair key="info"><String>Монтировать /net0/PKG как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0/PKG' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/PKG</String></Pair>
 			</Table>
@@ -293,7 +303,7 @@
 			<Table key="webman_nethost0_video">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
-				<Pair key="info"><String>Монтировать /net0/VIDEO как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0/VIDEO' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/VIDEO</String></Pair>
 			</Table>
@@ -307,7 +317,7 @@
 			<Table key="webman_nethost0_music">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
-				<Pair key="info"><String>Монтировать /net0/MUSIC как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0/MUSIC' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/MUSIC</String></Pair>
 			</Table>
@@ -321,7 +331,7 @@
 			<Table key="webman_nethost0_picture">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
-				<Pair key="info"><String>Монтировать /net0/PICTURE как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0/PICTURE' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/PICTURE</String></Pair>
 			</Table>
@@ -335,7 +345,7 @@
 			<Table key="webman_nethost0_roms">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
-				<Pair key="info"><String>Монтировать /net0/ROMS как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0/ROMS' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/ROMS</String></Pair>
 			</Table>
@@ -349,7 +359,7 @@
 			<Table key="webman_nethost0_pup">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать FIRMWARE</String></Pair>
-				<Pair key="info"><String>Монтировать /net0/FIRMWARE как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net0/FIRMWARE' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net0/FIRMWARE</String></Pair>
 			</Table>
@@ -363,7 +373,7 @@
 			<Table key="webman_nethost1">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net1</String></Pair>
-				<Pair key="info"><String>Монтировать /net1 как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/.</String></Pair>
 			</Table>
@@ -377,7 +387,7 @@
 			<Table key="webman_nethost1_pkg">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
-				<Pair key="info"><String>Монтировать /net1/PKG как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1/PKG' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/PKG</String></Pair>
 			</Table>
@@ -391,7 +401,7 @@
 			<Table key="webman_nethost1_video">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
-				<Pair key="info"><String>Монтировать /net1/VIDEO как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1/VIDEO' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/VIDEO</String></Pair>
 			</Table>
@@ -405,7 +415,7 @@
 			<Table key="webman_nethost1_music">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
-				<Pair key="info"><String>Монтировать /net1/MUSIC как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1/MUSIC' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/MUSIC</String></Pair>
 			</Table>
@@ -419,7 +429,7 @@
 			<Table key="webman_nethost1_picture">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
-				<Pair key="info"><String>Монтировать /net1/PICTURE как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1/PICTURE' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/PICTURE</String></Pair>
 			</Table>
@@ -433,7 +443,7 @@
 			<Table key="webman_nethost1_roms">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
-				<Pair key="info"><String>Монтировать /net1/ROMS как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1/ROMS' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/ROMS</String></Pair>
 			</Table>
@@ -447,7 +457,7 @@
 			<Table key="webman_nethost1_pup">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать FIRMWARE</String></Pair>
-				<Pair key="info"><String>Монтировать /net1/FIRMWARE как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net1/FIRMWARE' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net1/FIRMWARE</String></Pair>
 			</Table>
@@ -461,7 +471,7 @@
 			<Table key="webman_nethost2">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net2</String></Pair>
-				<Pair key="info"><String>Монтировать /net2 как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/.</String></Pair>
 			</Table>
@@ -475,7 +485,7 @@
 			<Table key="webman_nethost2_pkg">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
-				<Pair key="info"><String>Монтировать /net2/PKG как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2/PKG' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/PKG</String></Pair>
 			</Table>
@@ -489,7 +499,7 @@
 			<Table key="webman_nethost2_video">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
-				<Pair key="info"><String>Монтировать /net2/VIDEO как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2/VIDEO' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/VIDEO</String></Pair>
 			</Table>
@@ -503,7 +513,7 @@
 			<Table key="webman_nethost2_music">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
-				<Pair key="info"><String>Монтировать /net2/MUSIC как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2/MUSIC' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/MUSIC</String></Pair>
 			</Table>
@@ -517,7 +527,7 @@
 			<Table key="webman_nethost2_picture">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
-				<Pair key="info"><String>Монтировать /net2/PICTURE как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2/PICTURE' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/PICTURE</String></Pair>
 			</Table>
@@ -531,7 +541,7 @@
 			<Table key="webman_nethost2_roms">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
-				<Pair key="info"><String>Монтировать /net2/ROMS как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2/ROMS' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/ROMS</String></Pair>
 			</Table>
@@ -545,7 +555,7 @@
 			<Table key="webman_nethost2_pup">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String></String>Монтировать FIRMWARE</Pair>
-				<Pair key="info"><String>Монтировать /net2/FIRMWARE как /dev_bdvd</String></Pair>
+				<Pair key="info"><String>Монтировать '/net2/FIRMWARE' как '/dev_bdvd'</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/net2/FIRMWARE</String></Pair>
 			</Table>
@@ -572,13 +582,27 @@
 		<Attributes>
 			<Table key="webman_unmount">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/homebrew.png</String></Pair>
-				<Pair key="title"><String>Выгрузить игру</String></Pair>
-				<Pair key="info"><String>Текущая смонтированная игра будет выгружена [Select+O]</String></Pair>
+				<Pair key="title"><String>Размонтировать</String></Pair>
+				<Pair key="info"><String>Текущая смонтированная игра/папка будет выгружена [Select+O]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/mount_ps3/unmount</String></Pair>
 			</Table>
 		</Attributes>
 		<Items><Item class="type:x-xmb/module-action" key="webman_unmount" attr="webman_unmount"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Eject Disc -->
+	<View id="seg_webman_eject">
+		<Attributes>
+			<Table key="webman_eject">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/bd.png</String></Pair>
+				<Pair key="title"><String>Извлечь диск</String></Pair>
+				<Pair key="info"><String>Диск будет извлечён из привода PS3</String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/eject.ps3</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_eject" attr="webman_eject"/></Items>
 	</View>
 
 	<!-- Main > webMAN > Insert Disc -->
