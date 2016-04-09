@@ -5,7 +5,7 @@
 	<View id="seg_webman_links">
 		<Attributes>
 			<Table key="links">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>webMAN</String></Pair>
 				<Pair key="info"><String>快速連結至 webMAN 各項功能</String></Pair>
@@ -31,14 +31,64 @@
 			<Query class="type:x-xmb/folder-pixmap" key="webman_cache_link" src="#seg_webman_cache"/>
 
 			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost_link" src="#seg_webman_nethost_links"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_block_psn_link" src="#seg_webman_block_psn"/>
 
+			<Query class="type:x-xmb/folder-pixmap" key="webman_redirect_usb_link" src="#seg_webman_redirect_usb_links"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_gamedata_link" src="#seg_webman_gamedata"/>
-			
+			<Query class="type:x-xmb/folder-pixmap" key="webman_gamefix_link" src="#seg_webman_gamefix"/>
+
 			<Query class="type:x-xmb/folder-pixmap" key="webman_insert_link" src="#seg_webman_insert"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_unload" src="#seg_webman_unload"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_wm_vsh_menu" src="#seg_wm_vsh_menu"/>
 
-			<Query class="type:x-xmb/folder-pixmap" key="webman_wm_vsh_menu" src="#seg_wm_vsh_menu"/> 		 <Query class="type:x-xmb/folder-pixmap" key="webman_webman_restart" src="#seg_webman_restart"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_restart" src="#seg_webman_restart"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_webman_shutdown" src="#seg_webman_shutdown"/>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_prepare_ntfs" src="xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId BLES80616"/>
+		</Items>
+	</View>
+
+	<!-- Main > USB Redirect -->
+	<View id="seg_webman_redirect_usb_links">
+		<Attributes>
+			<Table key="redirect_usb_links">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
+				<Pair key="title"><String>Redirect USB000</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="child"><String>segment</String></Pair>
+			</Table>
+		</Attributes>
+		<Items>
+			<Query class="type:x-xmb/folder-pixmap" key="redirect_usb_links" attr="redirect_usb_links" src="#seg_webman_redirect_usb_sublinks"/>
+		</Items>
+	</View>
+
+	<View id="seg_webman_redirect_usb_sublinks">
+		<Items>
+			<Query class="type:x-xmb/folder-pixmap" key="redirect_usb_items" src="#seg_webman_redirect_usb_items"/>
+		</Items>
+	</View>
+
+	<View id="seg_webman_redirect_usb_items">
+		<Attributes>
+			<Table key="remap_usb0">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="title"><String>Remap USB000 to HDD</String></Pair>
+				<Pair key="info"><String>Redirect USB000 to /dev_hdd0/packages</String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/remap.ps3/dev_usb000&to=/dev_hdd0/packages</String></Pair>
+			</Table>
+			<Table key="unmap_usb0">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="title"><String>Unmap USB000</String></Pair>
+				<Pair key="info"><String>Restore redirection access to USB000</String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/unmap.ps3/dev_usb000</String></Pair>
+			</Table>
+		</Attributes>
+		<Items>
+			<Item class="type:x-xmb/module-action" key="remap_usb0"		attr="remap_usb0"/>
+			<Item class="type:x-xmb/module-action" key="unmap_usb0"		attr="unmap_usb0"/>
 		</Items>
 	</View>
 
@@ -60,10 +110,12 @@
 
 	<View id="seg_webman_nethost_sublinks">
 		<Items>
-			<Query class="type:x-xmb/folder-pixmap" key="nethost_links0" attr="nethost_links0" src="#seg_webman_nethost_links_items0"/>
-			<Query class="type:x-xmb/folder-pixmap" key="nethost_links1" attr="nethost_links1" src="#seg_webman_nethost_links_items1"/>
-			<Query class="type:x-xmb/folder-pixmap" key="nethost_links2" attr="nethost_links2" src="#seg_webman_nethost_links_items2"/>
-			<Query class="type:x-xmb/folder-pixmap" key="seg_webman_system"  src="#seg_webman_system_files"/>
+			<Query class="type:x-xmb/folder-pixmap" key="nethost_links0"    src="#seg_webman_nethost_links_items0"/>
+			<Query class="type:x-xmb/folder-pixmap" key="nethost_links1"    src="#seg_webman_nethost_links_items1"/>
+			<Query class="type:x-xmb/folder-pixmap" key="nethost_links2"    src="#seg_webman_nethost_links_items2"/>
+			<Query class="type:x-xmb/folder-pixmap" key="nethost_links3"    src="#seg_webman_nethost_links_items3"/>
+			<Query class="type:x-xmb/folder-pixmap" key="nethost_links4"    src="#seg_webman_nethost_links_items4"/>
+			<Query class="type:x-xmb/folder-pixmap" key="seg_webman_system" src="#seg_webman_system_files"/>
 		</Items>
 	</View>
 
@@ -124,6 +176,36 @@
 		</Items>
 	</View>
 
+	<View id="seg_webman_nethost_links_items3">
+		<Attributes>
+			<Table key="nethost3_links">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
+				<Pair key="title"><String>Net3 Folders</String></Pair>
+				<Pair key="info"><String>Mount /net3 folders as local /dev_bdvd</String></Pair>
+				<Pair key="child"><String>segment</String></Pair>
+			</Table>
+		</Attributes>
+		<Items>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3" attr="nethost3_links" src="#seg_webman_nethost_links_items_net3"/>
+		</Items>
+	</View>
+
+	<View id="seg_webman_nethost_links_items4">
+		<Attributes>
+			<Table key="nethost4_links">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
+				<Pair key="title"><String>Net4 Folders</String></Pair>
+				<Pair key="info"><String>Mount /net4 folders as local /dev_bdvd</String></Pair>
+				<Pair key="child"><String>segment</String></Pair>
+			</Table>
+		</Attributes>
+		<Items>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4" attr="nethost4_links" src="#seg_webman_nethost_links_items_net4"/>
+		</Items>
+	</View>
+
 	<View id="seg_webman_nethost_links_items_net0">
 		<Items>
 			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost0_link1" src="#seg_webman_nethost0"/>
@@ -160,6 +242,30 @@
 		</Items>
 	</View>
 
+	<View id="seg_webman_nethost_links_items_net3">
+		<Items>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link1" src="#seg_webman_nethost3"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link2" src="#seg_webman_nethost3_pkg"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link3" src="#seg_webman_nethost3_video"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link4" src="#seg_webman_nethost3_music"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link5" src="#seg_webman_nethost3_picture"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link6" src="#seg_webman_nethost3_roms"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost3_link7" src="#seg_webman_nethost3_pup"/>
+		</Items>
+	</View>
+
+	<View id="seg_webman_nethost_links_items_net4">
+		<Items>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link1" src="#seg_webman_nethost4"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link2" src="#seg_webman_nethost4_pkg"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link3" src="#seg_webman_nethost4_video"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link4" src="#seg_webman_nethost4_music"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link5" src="#seg_webman_nethost4_picture"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link6" src="#seg_webman_nethost4_roms"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost4_link7" src="#seg_webman_nethost4_pup"/>
+		</Items>
+	</View>
+
 	<!-- Main > webMAN > Refresh My Games -->
 	<View id="seg_webman_refresh_xml">
 		<Attributes>
@@ -192,7 +298,7 @@
 	<View id="seg_webman_cpursx">
 		<Attributes>
 			<Table key="webman_cpursx">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [溫度監控]</String></Pair>
 				<Pair key="info"><String>監控 PS3 的溫度</String></Pair>
 				<Pair key="module_name"><String>webbrowser_plugin</String></Pair>
@@ -206,7 +312,7 @@
 	<View id="seg_webman_games">
 		<Attributes>
 			<Table key="webman_games">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [遊戲]</String></Pair>
 				<Pair key="info"><String>於瀏覽器內列出我的遊戲</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -553,6 +659,188 @@
 		<Items><Item class="type:x-xmb/module-action" key="webman_nethost2_pup" attr="webman_nethost2_pup"/></Items>
 	</View>
 
+	<!-- Main > webMAN > Mount /net3/PKG as /dev_bdvd -->
+	<View id="seg_webman_nethost3_pkg">
+		<Attributes>
+			<Table key="webman_nethost3_pkg">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net3/PKG as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net3/PKG</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost3_pkg" attr="webman_nethost3_pkg"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net3/VIDEO as /dev_bdvd -->
+	<View id="seg_webman_nethost3_video">
+		<Attributes>
+			<Table key="webman_nethost3_video">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net3/VIDEO as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net3/VIDEO</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost3_video" attr="webman_nethost3_video"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net3/MUSIC as /dev_bdvd -->
+	<View id="seg_webman_nethost3_music">
+		<Attributes>
+			<Table key="webman_nethost3_music">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net3/MUSIC as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net3/MUSIC</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost3_music" attr="webman_nethost3_music"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net3/PICTURE as /dev_bdvd -->
+	<View id="seg_webman_nethost3_picture">
+		<Attributes>
+			<Table key="webman_nethost3_picture">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net3/PICTURE as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net3/PICTURE</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost3_picture" attr="webman_nethost3_picture"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net3/ROMS as /dev_bdvd -->
+	<View id="seg_webman_nethost3_roms">
+		<Attributes>
+			<Table key="webman_nethost3_roms">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net3/ROMS as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net3/ROMS</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost3_roms" attr="webman_nethost3_roms"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net3/FIRMWARE as /dev_bdvd -->
+	<View id="seg_webman_nethost3_pup">
+		<Attributes>
+			<Table key="webman_nethost3_pup">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net3/FIRMWARE as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net3/FIRMWARE</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost3_pup" attr="webman_nethost3_pup"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net4/PKG as /dev_bdvd -->
+	<View id="seg_webman_nethost4_pkg">
+		<Attributes>
+			<Table key="webman_nethost4_pkg">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net4/PKG as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net4/PKG</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost4_pkg" attr="webman_nethost4_pkg"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net4/VIDEO as /dev_bdvd -->
+	<View id="seg_webman_nethost4_video">
+		<Attributes>
+			<Table key="webman_nethost4_video">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net4/VIDEO as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net4/VIDEO</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost4_video" attr="webman_nethost4_video"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net4/MUSIC as /dev_bdvd -->
+	<View id="seg_webman_nethost4_music">
+		<Attributes>
+			<Table key="webman_nethost4_music">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net4/MUSIC as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net4/MUSIC</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost4_music" attr="webman_nethost4_music"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net4/PICTURE as /dev_bdvd -->
+	<View id="seg_webman_nethost4_picture">
+		<Attributes>
+			<Table key="webman_nethost4_picture">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net4/PICTURE as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net4/PICTURE</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost4_picture" attr="webman_nethost4_picture"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net4/ROMS as /dev_bdvd -->
+	<View id="seg_webman_nethost4_roms">
+		<Attributes>
+			<Table key="webman_nethost4_roms">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net4/ROMS as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net4/ROMS</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost4_roms" attr="webman_nethost4_roms"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Mount /net4/FIRMWARE as /dev_bdvd -->
+	<View id="seg_webman_nethost4_pup">
+		<Attributes>
+			<Table key="webman_nethost4_pup">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="title"><String>Mount /net4/FIRMWARE as /dev_bdvd</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/mount_ps3/net4/FIRMWARE</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_nethost4_pup" attr="webman_nethost4_pup"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Block PSN Servers -->
+	<View id="seg_webman_block_psn">
+		<Attributes>
+			<Table key="webman_block_psn">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/blockpsn.png</String></Pair>
+				<Pair key="title"><String>Block PSN Servers</String></Pair>
+				<Pair key="info"><String>Block access to PSN servers in LV1 / LV2</String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/browser.ps3$block_servers</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_block_psn" attr="webman_block_psn"/></Items>
+	</View>
+
 	<!-- Main > webMAN > gameDATA -->
 	<View id="seg_webman_gamedata">
 		<Attributes>
@@ -565,6 +853,20 @@
 			</Table>
 		</Attributes>
 		<Items><Item class="type:x-xmb/module-action" key="webman_gamedata" attr="webman_gamedata"/></Items>
+	</View>
+
+	<!-- Main > webMAN > gameFIX -->
+	<View id="seg_webman_gamefix">
+		<Attributes>
+			<Table key="webman_gamefix">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamefix.png</String></Pair>
+				<Pair key="title"><String>Fix mounted game</String></Pair>
+				<Pair key="info"><String>Change minimum system requirement to 4.20 (JB games only & hdd0)</String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/fixgame.ps3/dev_bdvd</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_gamefix" attr="webman_gamefix"/></Items>
 	</View>
 
 	<!-- Main > webMAN > Unmount Disc -->
@@ -599,7 +901,7 @@
 	<View id="seg_webman_unload">
 		<Attributes>
 			<Table key="webman_unload">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/devflash.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/unload.png</String></Pair>
 				<Pair key="title"><String>卸載 webMAN</String></Pair>
 				<Pair key="info"><String>從記憶體卸載 webMAN [R2+L3+R3]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -613,8 +915,8 @@
 	<View id="seg_wm_vsh_menu">
 		<Attributes>
 			<Table key="wm_vsh_menu_load">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/devflash.png</String></Pair>
-				<Pair key="title"><String>載入 VSH 選單</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/vshmenu.png</String></Pair>
+				<Pair key="title"><String>Load VSH Menu</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/loadprx.ps3?slot=5&prx=/dev_hdd0/plugins/wm_vsh_menu.sprx</String></Pair>
 			</Table>
@@ -626,7 +928,7 @@
 	<View id="seg_webman_restart">
 		<Attributes>
 			<Table key="webman_restart">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/restartps3.png</String></Pair>
 				<Pair key="title"><String>PS3 重開機</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -634,6 +936,20 @@
 			</Table>
 		</Attributes>
 		<Items><Item class="type:x-xmb/module-action" key="webman_restart" attr="webman_restart"/></Items>
+	</View>
+
+	<!-- Main > webMAN > Shutdown PS3 -->
+	<View id="seg_webman_shutdown">
+		<Attributes>
+			<Table key="webman_shutdown">
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/shutdownps3.png</String></Pair>
+				<Pair key="title"><String>Shutdown PS3</String></Pair>
+				<Pair key="info"><String></String></Pair>
+				<Pair key="module_name"><String>webrender_plugin</String></Pair>
+				<Pair key="module_action"><String>http://localhost/shutdown.ps3</String></Pair>
+			</Table>
+		</Attributes>
+		<Items><Item class="type:x-xmb/module-action" key="webman_shutdown" attr="webman_shutdown"/></Items>
 	</View>
 
 <!-- ...... more homebrew .......... -->

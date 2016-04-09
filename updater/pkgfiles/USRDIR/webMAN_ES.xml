@@ -5,7 +5,7 @@
 	<View id="seg_webman_links">
 		<Attributes>
 			<Table key="links">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>webMAN</String></Pair>
 				<Pair key="info"><String>Quick Links to webMAN Functions</String></Pair>
@@ -47,7 +47,7 @@
 		</Items>
 	</View>
 
-	<!-- Main > Net Hosts -->
+	<!-- Main > USB Redirect -->
 	<View id="seg_webman_redirect_usb_links">
 		<Attributes>
 			<Table key="redirect_usb_links">
@@ -115,7 +115,7 @@
 			<Query class="type:x-xmb/folder-pixmap" key="nethost_links2"    src="#seg_webman_nethost_links_items2"/>
 			<Query class="type:x-xmb/folder-pixmap" key="nethost_links3"    src="#seg_webman_nethost_links_items3"/>
 			<Query class="type:x-xmb/folder-pixmap" key="nethost_links4"    src="#seg_webman_nethost_links_items4"/>
-			<Query class="type:x-xmb/folder-pixmap" key="seg_webman_system"  src="#seg_webman_system_files"/>
+			<Query class="type:x-xmb/folder-pixmap" key="seg_webman_system" src="#seg_webman_system_files"/>
 		</Items>
 	</View>
 
@@ -298,7 +298,7 @@
 	<View id="seg_webman_cpursx">
 		<Attributes>
 			<Table key="webman_cpursx">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [Temperatura]</String></Pair>
 				<Pair key="info"><String>Monitorear la Temperatura del PS3 en el navegador Web</String></Pair>
 				<Pair key="module_name"><String>webbrowser_plugin</String></Pair>
@@ -312,7 +312,7 @@
 	<View id="seg_webman_games">
 		<Attributes>
 			<Table key="webman_games">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [Juegos]</String></Pair>
 				<Pair key="info"><String>Listar mis juegos en el navegador Web</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -831,7 +831,7 @@
 	<View id="seg_webman_block_psn">
 		<Attributes>
 			<Table key="webman_block_psn">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/blockpsn.png</String></Pair>
 				<Pair key="title"><String>Prevenir Accesso a PSN</String></Pair>
 				<Pair key="info"><String>Bloquear las direcciones URL de los servidores PSN en LV1 / LV2</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -859,7 +859,7 @@
 	<View id="seg_webman_gamefix">
 		<Attributes>
 			<Table key="webman_gamefix">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamefix.png</String></Pair>
 				<Pair key="title"><String>Arreglar juego en BDVD</String></Pair>
 				<Pair key="info"><String>Cambiar requerimiento mínimo del sistema a 4.20 (sólo juegos JB & hdd0)</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -901,7 +901,7 @@
 	<View id="seg_webman_unload">
 		<Attributes>
 			<Table key="webman_unload">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/devflash.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/unload.png</String></Pair>
 				<Pair key="title"><String>Salir de webMAN</String></Pair>
 				<Pair key="info"><String>Descargar webMAN de la memoria [R2+L3+R3]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -915,7 +915,7 @@
 	<View id="seg_wm_vsh_menu">
 		<Attributes>
 			<Table key="wm_vsh_menu_load">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/devflash.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/vshmenu.png</String></Pair>
 				<Pair key="title"><String>Cargar VSH Menu</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/loadprx.ps3?slot=5&prx=/dev_hdd0/plugins/wm_vsh_menu.sprx</String></Pair>
@@ -928,7 +928,7 @@
 	<View id="seg_webman_restart">
 		<Attributes>
 			<Table key="webman_restart">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/restartps3.png</String></Pair>
 				<Pair key="title"><String>Reiniciar PS3</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -942,7 +942,7 @@
 	<View id="seg_webman_shutdown">
 		<Attributes>
 			<Table key="webman_shutdown">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/shutdownps3.png</String></Pair>
 				<Pair key="title"><String>Apagar PS3</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
