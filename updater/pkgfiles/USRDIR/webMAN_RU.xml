@@ -960,7 +960,7 @@
 			<Table key="webman_restart">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/restartps3.png</String></Pair>
 				<Pair key="title"><String>Перезагрузить PS3</String></Pair>
-				<Pair key="info"><String>Консоль будет перезагружена [L3+R2+X]</String></Pair>
+				<Pair key="info"><String>Консоль будет перезагружена [L3+R2+O]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/restart.ps3</String></Pair>
 			</Table>
@@ -973,8 +973,8 @@
 		<Attributes>
 			<Table key="webman_shutdown">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/shutdownps3.png</String></Pair>
-				<Pair key="title"><String>Shutdown PS3</String></Pair>
-				<Pair key="info"><String></String></Pair>
+				<Pair key="title"><String>Выключить PS3</String></Pair>
+				<Pair key="info"><String>Консоль будет выключена [L3+R2+X]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/shutdown.ps3</String></Pair>
 			</Table>
