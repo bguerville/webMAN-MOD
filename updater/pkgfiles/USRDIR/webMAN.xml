@@ -51,7 +51,7 @@
 	<View id="seg_webman_redirect_usb_links">
 		<Attributes>
 			<Table key="redirect_usb_links">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Redirect USB000</String></Pair>
 				<Pair key="info"><String></String></Pair>
@@ -72,14 +72,14 @@
 	<View id="seg_webman_redirect_usb_items">
 		<Attributes>
 			<Table key="remap_usb0">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png</String></Pair>
 				<Pair key="title"><String>Remap USB000 to HDD</String></Pair>
 				<Pair key="info"><String>Redirect USB000 to /dev_hdd0/packages</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/remap.ps3/dev_usb000&to=/dev_hdd0/packages</String></Pair>
 			</Table>
 			<Table key="unmap_usb0">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png</String></Pair>
 				<Pair key="title"><String>Unmap USB000</String></Pair>
 				<Pair key="info"><String>Restore redirection access to USB000</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -122,8 +122,8 @@
 	<View id="seg_webman_system_files">
 		<Attributes>
 			<Table key="webman_system_files">
-				<Pair key="icon_rsc"><String>tex_album_icon</String></Pair>
-				<Pair key="icon_notation"><String>WNT_XmbItemAlbum</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/sysfiles.png</String></Pair>
+				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>System Files</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
@@ -270,7 +270,7 @@
 	<View id="seg_webman_refresh_xml">
 		<Attributes>
 			<Table key="webman_refresh_xml">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshxml.png</String></Pair>
 				<Pair key="title"><String>Refresh My Games</String></Pair>
 				<Pair key="info"><String>The game list will be displayed the next time the XMB is loaded</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -284,7 +284,7 @@
 	<View id="seg_webman_refresh_html">
 		<Attributes>
 			<Table key="webman_refresh_html">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshhtml.png</String></Pair>
 				<Pair key="title"><String>Refresh Web Games List</String></Pair>
 				<Pair key="info"><String>The game list in HTML will be updated for the browser mode</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -294,11 +294,11 @@
 		<Items><Item class="type:x-xmb/module-action" key="webman_refresh_html" attr="webman_refresh_html"/></Items>
 	</View>
 
-	<!-- Main > webMAN > PS3 webMAN [Temperature] -->
+	<!-- Main > webMAN > PS3 webMAN [SystemInfo] -->
 	<View id="seg_webman_cpursx">
 		<Attributes>
 			<Table key="webman_cpursx">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/sysinfo.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [Temperature]</String></Pair>
 				<Pair key="info"><String>Monitor PS3 Temperature on the Web Browser</String></Pair>
 				<Pair key="module_name"><String>webbrowser_plugin</String></Pair>
@@ -312,7 +312,7 @@
 	<View id="seg_webman_games">
 		<Attributes>
 			<Table key="webman_games">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamesbrowser.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [Games]</String></Pair>
 				<Pair key="info"><String>List my games on Web Browser</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -326,7 +326,7 @@
 	<View id="seg_webman_files">
 		<Attributes>
 			<Table key="webman_files">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/filemanager.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [Files]</String></Pair>
 				<Pair key="info"><String>List my files on Web Browser</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -340,7 +340,7 @@
 	<View id="seg_webman_cache">
 		<Attributes>
 			<Table key="seg_webman_cache">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/cachefiles.png</String></Pair>
 				<Pair key="title"><String>PS3 webMAN [Cache]</String></Pair>
 				<Pair key="info"><String>Delete files from /dev_hdd0/tmp/wmtmp</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
@@ -351,7 +351,7 @@
 
 	<View id="seg_webman_cache_files"><Items><Query class="type:x-xmb/folder-pixmap" key="seg_webman_cache_files" src="host://localhost/dev_hdd0/tmp/wmtmp"/></Items></View>
 
-	<!-- Main > webMAN > PS3 webMAN [Setup] -->
+	<!-- Main > webMAN > PS3 webMAN [Settings] -->
 	<View id="seg_webman_setup">
 		<Attributes>
 			<Table key="webman_setup">
@@ -873,7 +873,7 @@
 	<View id="seg_webman_unmount">
 		<Attributes>
 			<Table key="webman_unmount">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/homebrew.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/tmp/wm_icons/icon_wm_eject.png</String></Pair>
 				<Pair key="title"><String>Unmount Disc</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -887,7 +887,7 @@
 	<View id="seg_webman_insert">
 		<Attributes>
 			<Table key="webman_insert">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/bd.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/icon_wm_ps3.png</String></Pair>
 				<Pair key="title"><String>Insert Disc</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>

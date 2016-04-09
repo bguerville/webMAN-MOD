@@ -51,7 +51,7 @@
 	<View id="seg_webman_redirect_usb_links">
 		<Attributes>
 			<Table key="redirect_usb_links">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Redirect USB000</String></Pair>
 				<Pair key="info"><String></String></Pair>
@@ -72,14 +72,14 @@
 	<View id="seg_webman_redirect_usb_items">
 		<Attributes>
 			<Table key="remap_usb0">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png</String></Pair>
 				<Pair key="title"><String>Remap USB000 to HDD</String></Pair>
 				<Pair key="info"><String>Redirect USB000 to /dev_hdd0/packages</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/remap.ps3/dev_usb000&to=/dev_hdd0/packages</String></Pair>
 			</Table>
 			<Table key="unmap_usb0">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png</String></Pair>
 				<Pair key="title"><String>Unmap USB000</String></Pair>
 				<Pair key="info"><String>Restore redirection access to USB000</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -122,8 +122,8 @@
 	<View id="seg_webman_system_files">
 		<Attributes>
 			<Table key="webman_system_files">
-				<Pair key="icon_rsc"><String>tex_album_icon</String></Pair>
-				<Pair key="icon_notation"><String>WNT_XmbItemAlbum</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/sysfiles.png</String></Pair>
+				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>System Dateien</String></Pair>
 				<Pair key="child"><String>segment</String></Pair>
 			</Table>
@@ -148,7 +148,7 @@
 
 	<View id="seg_webman_nethost_links_items1">
 		<Attributes>
-			<Table key="nethost0_links">
+			<Table key="nethost1_links">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Net1 Ordner</String></Pair>
@@ -157,13 +157,13 @@
 			</Table>
 		</Attributes>
 		<Items>
-			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost0" attr="nethost0_links" src="#seg_webman_nethost_links_items_net1"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost1" attr="nethost1_links" src="#seg_webman_nethost_links_items_net1"/>
 		</Items>
 	</View>
 
 	<View id="seg_webman_nethost_links_items2">
 		<Attributes>
-			<Table key="nethost0_links">
+			<Table key="nethost2_links">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="icon_notation"><String>WNT_XmbItemBrowser</String></Pair>
 				<Pair key="title"><String>Net2 Ordner</String></Pair>
@@ -172,7 +172,7 @@
 			</Table>
 		</Attributes>
 		<Items>
-			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost0" attr="nethost0_links" src="#seg_webman_nethost_links_items_net2"/>
+			<Query class="type:x-xmb/folder-pixmap" key="webman_nethost2" attr="nethost2_links" src="#seg_webman_nethost_links_items_net2"/>
 		</Items>
 	</View>
 
@@ -294,7 +294,7 @@
 		<Items><Item class="type:x-xmb/module-action" key="webman_refresh_html" attr="webman_refresh_html"/></Items>
 	</View>
 
-	<!-- Main > webMAN > PS3 webMAN [Temperature] -->
+	<!-- Main > webMAN > PS3 webMAN [SystemInfo] -->
 	<View id="seg_webman_cpursx">
 		<Attributes>
 			<Table key="webman_cpursx">
@@ -873,7 +873,7 @@
 	<View id="seg_webman_unmount">
 		<Attributes>
 			<Table key="webman_unmount">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/unmount.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/tmp/wm_icons/icon_wm_eject.png</String></Pair>
 				<Pair key="title"><String>Disk auswerfen</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -887,7 +887,7 @@
 	<View id="seg_webman_insert">
 		<Attributes>
 			<Table key="webman_insert">
-				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/insert.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/icon_wm_ps3.png</String></Pair>
 				<Pair key="title"><String>Disk einziehen</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
