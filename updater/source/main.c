@@ -474,24 +474,24 @@ int main()
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webMAN_TR.xml" ,"/dev_hdd0/game/XMBMANPLS/USRDIR/FEATURES/webMAN_TR.xml");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webMAN_ZH.xml" ,"/dev_hdd0/game/XMBMANPLS/USRDIR/FEATURES/webMAN_ZH.xml");
 
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/bd.png"        	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/bd.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/blockpsn.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/blockpsn.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/cachefiles.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/cachefiles.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/filemanager.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/filemanager.png");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/devflash.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/devflash.png");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/gamesbrowser.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamesbrowser.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/gamedata.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/homebrew.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/homebrew.png");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/multiman.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/gamefix.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamefix.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/gamesbrowser.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamesbrowser.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/network.png"   	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/pkgmanager.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/pkgmanager.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/refreshhtml.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshhtml.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/refreshxml.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshxml.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/restartps3.png"	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/restartps3.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/settings.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/shutdownps3.png" 	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/shutdownps3.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/sysfiles.png" 	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/sysfiles.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/sysinfo.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/sysinfo.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/tools.png"  		,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/unload.png"  		,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/unload.png");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webman.png"  		,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/webman.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/usbredirect.png" 	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/usbredirect.png");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/vshmenu.png"  	,"/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/vshmenu.png");
 
 	sysLv2FsMkdir("/dev_hdd0/plugins", 0777);
 
