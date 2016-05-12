@@ -972,10 +972,10 @@ next_html_entry:
 			sprintf(templn, " <a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.open('/index.ps3?'+s,'_self');}\">%'i %s &#x1F50D;</a></font><HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 
 #ifndef LITE_EDITION
-			sortable = file_exists(HTML_BASE_PATH "/jquery-1.12.0.min.js") && file_exists(HTML_BASE_PATH "/jquery-ui.min.js");
+			sortable = file_exists(HTML_BASE_PATH "/jquery-1.12.3.min.js") && file_exists(HTML_BASE_PATH "/jquery-ui.min.js");
 			if(sortable)
 			{
-				strcat(buffer,  "<script src=\"" HTML_BASE_PATH "/jquery-1.12.0.min.js\"></script>"
+				strcat(buffer,  "<script src=\"" HTML_BASE_PATH "/jquery-1.12.3.min.js\"></script>"
 								"<script src=\"" HTML_BASE_PATH "/jquery-ui.min.js\"></script>"
 								"<script>$(function(){$(\"#mg\").sortable();});</script><div id=\"mg\">");
 			}

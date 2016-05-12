@@ -23,7 +23,7 @@
 
 #define MIN(a, b)	((a) <= (b) ? (a) : (b))
 
-//#define MERGE_DRIVES 1
+#define MERGE_DRIVES 1
 
 enum
 {
@@ -298,6 +298,9 @@ static int64_t calculate_directory_size(char *path)
 
 	//DPRINTF("Calculate %s\n", path);
 
+	file_stat_t st;
+	if (stat_file(path, &st) < 0) return -1;
+
 	d = opendir(path);
 	if (!d)
 		return -1;
@@ -314,7 +317,6 @@ static int64_t calculate_directory_size(char *path)
 
 		//DPRINTF("name: %s\n", entry->d_name);
 
-		file_stat_t st;
 		char newpath[path_len + name_len + 2];
 
 		sprintf(newpath, "%s/%s", path, entry->d_name);
@@ -912,6 +914,14 @@ static int process_open_dir_cmd(client_t *client, netiso_open_dir_cmd *cmd)
 	}
 
 	client->dirpath = NULL;
+
+	file_stat_t st;
+	if (stat_file(dirpath, &st) < 0)
+	{
+		DPRINTF("open dir error on \"%s\"\n", dirpath);
+		result.open_result = BE32(-1);
+		return -1;
+	}
 
 	client->dir = opendir(dirpath);
 	if (!client->dir)

@@ -241,7 +241,7 @@ next_ntfs_entry:
 									if(file_exists(wm_path)==false)
 										ExtractFileFromISO(path, "/PS3_GAME/PARAM.SFO;1", wm_path);
 
-									if(c_firmware < 4.78f && need_fix(wm_path))
+									if(c_firmware < 4.80f && need_fix(wm_path))
 									{
 										fix_iso(path, 0x100000UL);
 

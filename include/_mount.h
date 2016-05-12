@@ -54,6 +54,7 @@ static void detect_firmware(void)
 
 		LV2_OFFSET_ON_LV1 = (uint64_t)lv2_offset * 0x1000000ULL;
 
+		if(peekq(0x80000000002ED808ULL)==CEX) {SYSCALL_TABLE = SYSCALL_TABLE_480;  c_firmware=4.80f;}				else
 		if(peekq(0x80000000002ED818ULL)==CEX) {SYSCALL_TABLE = SYSCALL_TABLE_475;  c_firmware=(peekq(0x80000000002FCB68ULL)==0x323031352F31322FULL)?4.78f:(peekq(0x80000000002FCB68ULL)==0x323031352F30382FULL)?4.76f:4.75f;} else
 		if(peekq(0x80000000002ED778ULL)==CEX) {SYSCALL_TABLE = SYSCALL_TABLE_470;  c_firmware=4.70f;}				else
 		if(peekq(0x80000000002ED860ULL)==CEX) {SYSCALL_TABLE = SYSCALL_TABLE_465;  c_firmware=(peekq(0x80000000002FC938ULL)==0x323031342F31312FULL)?4.66f:4.65f;} else
@@ -72,6 +73,7 @@ static void detect_firmware(void)
 		if(peekq(0x80000000002E9F08ULL)==CEX) {SYSCALL_TABLE = SYSCALL_TABLE_430;  c_firmware=4.30f;}				else
 
 #ifdef DEX_SUPPORT
+		if(peekq(0x800000000030F3A0ULL)==DEX) {SYSCALL_TABLE = SYSCALL_TABLE_480D; c_firmware=4.80f; dex_mode=2;}	else
 		if(peekq(0x800000000030F2D0ULL)==DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware=(peekq(0x800000000031EF48ULL)==0x323031352F31322FULL)?4.78f:(peekq(0x800000000031EF48ULL)==0x323031352F30382FULL)?4.76f:4.75f; dex_mode=2;}	else
 		if(peekq(0x800000000030F240ULL)==DEX) {SYSCALL_TABLE = SYSCALL_TABLE_470D; c_firmware=4.70f; dex_mode=2;}	else
 		if(peekq(0x800000000030F1A8ULL)==DEX) {SYSCALL_TABLE = SYSCALL_TABLE_465D; c_firmware=(peekq(0x800000000031EBA8ULL)==0x323031342F31312FULL)?4.66f:4.65f; dex_mode=2;} else
@@ -93,6 +95,7 @@ static void detect_firmware(void)
 	  //if(peekq(0x800000000032B270ULL)==DEH) {SYSCALL_TABLE = SYSCALL_TABLE_450H; c_firmware=4.50f; dex_mode=1;}	else
 		if(peekq(0x800000000032EDC8ULL)==DEH) {SYSCALL_TABLE = SYSCALL_TABLE_460H; c_firmware=4.60f; dex_mode=1;}	else
 		if(peekq(0x800000000032EB60ULL)==DEH) {SYSCALL_TABLE = SYSCALL_TABLE_475H; c_firmware=(peekq(0x8000000000344B70ULL)==0x323031352F31322FULL)?4.78f:(peekq(0x8000000000344B70ULL)==0x323031352F30382FULL)?4.76f:4.75f; dex_mode=1;}	else
+		if(peekq(0x800000000032EB60ULL)==DEH) {SYSCALL_TABLE = SYSCALL_TABLE_480H; c_firmware=4.80f; dex_mode=1;}	else
 #endif
 
 #ifndef COBRA_ONLY
@@ -126,7 +129,8 @@ static void detect_firmware(void)
 		if(c_firmware==4.65f) {base_addr=0x2D88E0; open_hook=0x2A02C8;} else
 		if(c_firmware==4.66f) {base_addr=0x2D88E0; open_hook=0x2A02C8;} else
 		if(c_firmware==4.70f) {base_addr=0x2D8A70; open_hook=0x2975C0;} else
-		if(c_firmware>=4.75f && c_firmware<=4.78f) {base_addr=0x2D8AF0; open_hook=0x297638;}
+		if(c_firmware>=4.75f && c_firmware<=4.78f) {base_addr=0x2D8AF0; open_hook=0x297638;} else
+		if(c_firmware==4.80f) {base_addr=0x2D8AE0; open_hook=0x29762C;}
 	}
  #ifdef DECR_SUPPORT
 	else if(dex_mode == 1)
@@ -135,6 +139,7 @@ static void detect_firmware(void)
 	  //if(c_firmware==4.50f) {base_addr=0x30D2C0; open_hook=0x2CEF08;} else
 		if(c_firmware==4.60f) {base_addr=0x310EE0; open_hook=0x2D1464;} else
 		if(c_firmware==4.78f) {base_addr=0x3110F0; open_hook=0x2C87E0;}
+		if(c_firmware==4.80f) {base_addr=0x3110F0; open_hook=0x2C87D4;}
 	}
  #endif
  #ifdef DEX_SUPPORT
@@ -155,6 +160,7 @@ static void detect_firmware(void)
 		if(c_firmware==4.66f) {base_addr=0x2FA230; open_hook=0x2BB010;} else
 		if(c_firmware==4.70f) {base_addr=0x2FA540; open_hook=0x2B2480;} else
 		if(c_firmware>=4.75f && c_firmware<=4.78f) {base_addr=0x2FA5B0; open_hook=0x2B24F8;}
+		if(c_firmware==4.80f) {base_addr=0x2FA680; open_hook=0x2B25C4;}
 	}
  #endif
 
@@ -164,9 +170,9 @@ static void detect_firmware(void)
 
 	if(!dex_mode)
 	{ // CEX
-		if(c_firmware>=4.55f && c_firmware<=4.78f)
+		if(c_firmware>=4.55f && c_firmware<=4.80f)
 		{
-			get_fan_policy_offset=0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78
+			get_fan_policy_offset=0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 			set_fan_policy_offset=0x800000000000A334ULL; // sys 389 set_fan_policy
 
 			// idps / psid cex
@@ -185,7 +191,7 @@ static void detect_firmware(void)
 				idps_offset1 = 0x80000000003E2DB0ULL;
 				idps_offset2 = 0x8000000000474AF4ULL;
 			}
-			else if(c_firmware>=4.75f && c_firmware<=4.78f)
+			else if(c_firmware>=4.75f && c_firmware<=4.80f)
 			{
 				idps_offset1 = 0x80000000003E2E30ULL;
 				idps_offset2 = 0x8000000000474AF4ULL;
@@ -214,12 +220,12 @@ static void detect_firmware(void)
 #if defined(DEX_SUPPORT) || defined(DECR_SUPPORT)
 	else if(dex_mode)
 	{ // DEX & DEH
-		if(c_firmware>=4.55f && c_firmware<=4.78f)
+		if(c_firmware>=4.55f && c_firmware<=4.80f)
 		{
-				get_fan_policy_offset=0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78
+				get_fan_policy_offset=0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 				set_fan_policy_offset=0x800000000000A3B4ULL; // sys 389 set_fan_policy
 
-				// idps / psid dex
+			// idps / psid dex
 #ifdef DECR_SUPPORT
 			if(dex_mode == 1)
 			{ // DEH
@@ -228,7 +234,7 @@ static void detect_firmware(void)
 					idps_offset1 = 0x8000000000432430ULL;
 					idps_offset2 = 0x80000000004C4F1CULL;
 				}
-				else if(c_firmware>=4.75f && c_firmware<=4.78f)
+				else if(c_firmware>=4.75f && c_firmware<=4.80f)
 				{
 					idps_offset1 = 0x80000000004326B0ULL;
 					idps_offset2 = 0x80000000004C4AF4ULL;
@@ -251,13 +257,18 @@ static void detect_firmware(void)
 				idps_offset1 = 0x80000000004098B0ULL;
 				idps_offset2 = 0x800000000049CAF4ULL;
 			}
-			else if(c_firmware>=4.75f && c_firmware<=4.78f)
+			else if(c_firmware>=4.75f && c_firmware<4.80f)
 			{
 				idps_offset1 = 0x8000000000409930ULL;
 				idps_offset2 = 0x800000000049CAF4ULL;
 			}
+			else if(c_firmware==4.80f)
+			{
+				idps_offset1 = 0x8000000000409A30ULL;
+				idps_offset2 = 0x800000000049CAF4ULL;
+			}
 
-				if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
+			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
 		}
 		else if(c_firmware>=4.21f && c_firmware<=4.53f)
 		{
@@ -1407,6 +1418,32 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x3066B8;
 #endif
 		}
+		else
+		if(c_firmware==4.80f)
+		{
+			//patches by deank
+			pokeq(0x8000000000267144ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
+			pokeq(0x800000000026714CULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
+			pokeq(0x800000000005688CULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
+			pokeq(0x800000000005664CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
+
+			pokeq(0x80000000000565F8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
+			pokeq(0x8000000000056600ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
+			pokeq(0x800000000005A6DCULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
+			pokeq(0x800000000005A6F0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
+
+			pokeq(0x800000000005622CULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
+			pokeq(0x80000000002275ECULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors
+
+			pokeq(0x8000000000055C58ULL, 0xF821FE917C0802A6ULL ); // just restore the original
+			pokeq(0x8000000000058E18ULL, 0x419E0038E8610098ULL ); // just restore the original
+
+#ifndef COBRA_ONLY
+			sc_600=0x33FF18;
+			sc_604=0x340080;
+			sc_142=0x3066A8;
+#endif
+		}
 	}
 
 #ifdef DECR_SUPPORT
@@ -1496,6 +1533,32 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_600=0x38CB60; //003B28F8 + 600*8 = 003B3BB8 -> 80 00 00 00 00 38 CB 60
 			sc_604=0x38CC50; //003B28F8 + 604*8 = 003B3BD8 -> 80 00 00 00 00 38 CC 50
 			sc_142=0x34ED30; //003B28F8 + 142*8 = 003B2D68 -> 80 00 00 00 00 34 ED 30
+#endif
+		}
+		else
+		if(c_firmware==4.80f)
+		{
+			//patches by deank
+			pokeq(0x800000000026E528ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
+			pokeq(0x800000000026E530ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
+			pokeq(0x800000000005A340ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
+			pokeq(0x800000000005A020ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
+
+			pokeq(0x800000000005A3B0ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
+			pokeq(0x800000000005A3B8ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
+			pokeq(0x800000000005E494ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
+			pokeq(0x800000000005E4A8ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
+
+			pokeq(0x8000000000059FE4ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
+			pokeq(0x800000000022E710ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-08-14)
+
+			pokeq(0x8000000000059A10ULL, 0xF821FE917C0802A6ULL ); // just restore the original
+			pokeq(0x800000000005CBD0ULL, 0x419E0038E8610098ULL ); // just restore the original
+
+#ifndef COBRA_ONLY
+			sc_600=0x38CB60; //0x3B28F8 + 600*8 = 003B3BB8 -> 80 00 00 00 00 38 CB 60
+			sc_604=0x38CC50; //0x3B28F8 + 604*8 = 003B3BD8 -> 80 00 00 00 00 38 CC 50
+			sc_142=0x34ED30; //0x3B28F8 + 142*8 = 003B2D68 -> 80 00 00 00 00 34 ED 30
 #endif
 		}
 	}
@@ -1823,6 +1886,32 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_600=0x364848; //0x38A3E8 + 600*8 = 0038B6A8 -> 80 00 00 00 00 36 48 48
 			sc_604=0x364920; //0x38A3E8 + 604*8 = 0038B6C8 -> 80 00 00 00 00 36 49 20
 			sc_142=0x329220; //0x38A3E8 + 142*8 = 0038A858 -> 80 00 00 00 00 32 92 20
+#endif
+		}
+		else
+		if(c_firmware==4.80f)
+		{
+			//patches by deank
+			pokeq(0x800000000026D860ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
+			pokeq(0x800000000026D868ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
+			pokeq(0x8000000000059F58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
+			pokeq(0x800000000005A01CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
+
+			pokeq(0x8000000000059FC8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
+			pokeq(0x8000000000059FD0ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
+			pokeq(0x800000000005E0ACULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
+			pokeq(0x800000000005E0C0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
+
+			pokeq(0x8000000000059BFCULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
+			pokeq(0x800000000022DAC8ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-08-14)
+
+			pokeq(0x8000000000059628ULL, 0xF821FE917C0802A6ULL ); // just restore the original
+			pokeq(0x800000000005C7E8ULL, 0x419E0038E8610098ULL ); // just restore the original
+
+#ifndef COBRA_ONLY
+			sc_600=0x364918; //0x38A4E8 + 600*8 = 0038B7A8 -> 80 00 00 00 00 36 49 18
+			sc_604=0x3649F0; //0x38A4E8 + 604*8 = 0038B7C8 -> 80 00 00 00 00 36 49 F0
+			sc_142=0x3292F0; //0x38A4E8 + 142*8 = 0038A958 -> 80 00 00 00 00 32 92 F0
 #endif
 		}
 	}
@@ -2779,6 +2868,8 @@ patch:
 		sprintf(expplg, "%s/IEXP0_460.BIN", app_sys);
 	else if(c_firmware==4.70f || c_firmware==4.75f || c_firmware==4.76f || c_firmware==4.78f)
 		sprintf(expplg, "%s/IEXP0_470.BIN", app_sys);
+	else if(c_firmware==4.80f)
+		sprintf(expplg, "%s/IEXP0_480.BIN", app_sys);
 	else
         sprintf(expplg, "%s/none", app_sys);
 
@@ -2848,7 +2939,7 @@ exit_mount:
 
 #ifdef FIX_GAME
 	// re-check PARAM.SFO to notify if game needs to be fixed
-	if(ret && (c_firmware<4.78f))
+	if(ret && (c_firmware<4.80f))
 	{
 		char filename[64];
 		sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");
@@ -2876,8 +2967,9 @@ exit_mount:
 #endif
 
 #ifdef COBRA_ONLY
+ #ifdef EXT_GDATA
 	if((extgd==0) && isDir("/dev_bdvd/GAMEI")) set_gamedata_status(2, true); // auto-enable external gameDATA (if GAMEI exists on /bdvd)
-
+ #endif
 	{
 		if(ret && (strstr(_path, ".PUP.ntfs[BD") || file_exists("/dev_bdvd/PS3UPDAT.PUP")))
 			sys_map_path((char*)"/dev_bdvd/PS3/UPDATE", (char*)"/dev_bdvd"); //redirect root of bdvd to /dev_bdvd/PS3/UPDATE

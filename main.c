@@ -1022,10 +1022,17 @@ again3:
 			if(islike(param, "/cpursx_ps3"))
 			{
 				char *cpursx = header; get_cpursx(cpursx);
+/*              // prevents flickering but cause error 80710336 in ps3 browser (silk mode)
 				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
 								"<script>parent.document.getElementById('lbl_cpursx').innerHTML = \"%s\";</script>",
 								"/cpursx_ps3", cpursx);
-
+*/
+				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
+								"%s"
+								"<a href=\"/cpursx.ps3\" target=\"_parent\" style=\"text-decoration:none;\">"
+								"<font color=\"#fff\">%s</a>",
+								"/cpursx_ps3", HTML_BODY, cpursx);
+//
 				sprintf(header, HTML_RESPONSE_FMT,
 								200, "/cpursx_ps3", 390 + strlen(param), HTML_HEADER, param, HTML_BODY_END);
 
@@ -1753,15 +1760,21 @@ html_response:
 						char cpursx[32]; get_cpursx(cpursx);
 
 						sprintf(templn, " [<a href=\"/cpursx.ps3\" style=\"text-decoration:none;\">"
-                                        "<span id=\"lbl_cpursx\">%s</span></a>]<iframe src=\"/cpursx_ps3\" style=\"display:none;\"></iframe>"
+										// prevents flickering but cause error 80710336 in ps3 browser (silk mode)
+										//"<span id=\"lbl_cpursx\">%s</span></a>]<iframe src=\"/cpursx_ps3\" style=\"display:none;\"></iframe>"
+										"<span id=\"ifrm_err\" style=\"display:none\">%s&nbsp;</span>%s</a>]"
+										"<script>function no_error(ifrm){try{var doc=ifrm.contentDocument||ifrm.contentWindow.document;}catch(e){ifrm_err.style.display='inline-block';ifrm.style.display='none';}}</script>"
+										//
 										"<hr width=\"100%%\">"
 										"<div id=\"rxml\"><H1>%s XML ...</H1></div>"
 										"<div id=\"rhtm\"><H1>%s HTML ...</H1></div>"
 #ifdef COPY_PS3
 										"<div id=\"rcpy\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
-                                        "<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
+										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
+										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
 #else
-                                        "<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
+										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
+										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
 #endif
 					}
 

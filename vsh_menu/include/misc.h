@@ -34,9 +34,9 @@
 
 
 #define _ES32(v)((uint32_t)(((((uint32_t)v) & 0xFF000000) >> 24) | \
-							              ((((uint32_t)v) & 0x00FF0000) >> 8 ) | \
-							              ((((uint32_t)v) & 0x0000FF00) << 8 ) | \
-							              ((((uint32_t)v) & 0x000000FF) << 24)))
+							((((uint32_t)v) & 0x00FF0000) >> 8 ) | \
+							((((uint32_t)v) & 0x0000FF00) << 8 ) | \
+							((((uint32_t)v) & 0x000000FF) << 24)))
 
 
 void VSHPadGetData(CellPadData *data);

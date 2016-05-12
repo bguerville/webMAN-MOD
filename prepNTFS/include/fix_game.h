@@ -67,7 +67,7 @@ static bool need_fix(char *filename)
 			char version[8];
 			strncpy(version, (char *) &mem[pos], 7);
 			int fw_ver=10000*((version[1] & 0xFF)-'0') + 1000*((version[3] & 0xFF)-'0') + 100*((version[4] & 0xFF)-'0');
-			if((c_firmware>=4.20f && c_firmware<4.78f) && (fw_ver>(int)(c_firmware*10000.0f))) return true;
+			if((c_firmware>=4.20f && c_firmware<4.80f) && (fw_ver>(int)(c_firmware*10000.0f))) return true;
 			break;
 		}
 
@@ -99,7 +99,7 @@ static bool fix_param_sfo(unsigned char *mem, char *titleID)
 			char version[8];
 			strncpy(version, (char *) &mem[pos], 7);
 			int fw_ver=10000*((version[1] & 0xFF)-'0') + 1000*((version[3] & 0xFF)-'0') + 100*((version[4] & 0xFF)-'0');
-			if((c_firmware>=4.20f && c_firmware<4.78f) && (fw_ver>(int)(c_firmware*10000.0f)))
+			if((c_firmware>=4.20f && c_firmware<4.80f) && (fw_ver>(int)(c_firmware*10000.0f)))
 			{
 				mem[pos+1]='4'; mem[pos+3]='2'; mem[pos+4]='0'; ret=true;
 			}

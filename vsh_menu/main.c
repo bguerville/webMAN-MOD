@@ -957,8 +957,14 @@ static void do_main_menu_action(void)
       play_rco_sound("system_plugin", "snd_system_ok");
       return;
     case 3:
-      send_wm_request((char*)"GET /refresh.ps3");
+      if(entry_mode[line]==1) send_wm_request((char*)"GET /refresh.ps3?1"); else
+      if(entry_mode[line]==2) send_wm_request((char*)"GET /refresh.ps3?2"); else
+      if(entry_mode[line]==3) send_wm_request((char*)"GET /refresh.ps3?3"); else
+      if(entry_mode[line]==4) send_wm_request((char*)"GET /refresh.ps3?4"); else
+      if(entry_mode[line]==5) send_wm_request((char*)"GET /refresh.ps3?0"); else
+                              send_wm_request((char*)"GET /refresh.ps3");
 
+      entry_mode[line] = 0; sprintf(entry_str[view][line], "3: Refresh XML");
       break;
     case 4:
       send_wm_request((char*)"GET /extgd.ps3");
@@ -1420,7 +1426,7 @@ static void draw_background_and_title(void)
                                                     (view == FILE_MANAGER)    ? curdir + curdir_offset :
                                                     (view == PLUGINS_MANAGER) ? "Plugins Manager"      :
                                                                                "VSH Menu for webMAN") );
-  set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.08");
+  set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.09");
 }
 
 static void draw_menu_options(void)
@@ -1499,7 +1505,7 @@ static void draw_legend(void)
   else if(view == MAIN_MENU)
   {
       // draw up-down button
-      draw_png(0, 522, 230, 128 + ((line<3||line==6||line==9||line==0xB) ? 64 : 0), 432, 32, 32);
+      draw_png(0, 522, 230, 128 + ((line<4||line==6||line==9||line==0xB) ? 64 : 0), 432, 32, 32);
       print_text(560, 234, " Choose");
   }
   else if(view == REBUG_MENU)
@@ -1609,12 +1615,15 @@ static void draw_drives_info(void)
     {
       if(!read) break;
 
-      if((strncmp("dev_hdd",   dir.d_name, 7) != 0) &&
-         (strncmp("dev_usb",   dir.d_name, 7) != 0) &&
-         (strncmp("dev_sd",    dir.d_name, 6) != 0) &&
-         (strncmp("dev_ms",    dir.d_name, 6) != 0) &&
-         (strncmp("dev_cf",    dir.d_name, 6) != 0) &&
-         (strncmp("dev_blind", dir.d_name, 9) != 0))
+      if (strncmp("dev_hdd", dir.d_name, 7) == 0)
+        drive_type[j] = 1;
+      else if (strncmp("dev_usb", dir.d_name, 7) == 0)
+        drive_type[j] = 2;
+      else if (strncmp("dev_blind", dir.d_name, 9) == 0 )
+        drive_type[j] = 3;
+      else if ((strncmp("dev_sd", dir.d_name, 6) == 0 ) || (strncmp("dev_ms", dir.d_name, 6) == 0 ) ||  (strncmp("dev_cf", dir.d_name, 6) == 0 ))
+        drive_type[j] = 4;
+      else
         continue;
 
       sprintf(drivepath, "/%s", dir.d_name);
@@ -1627,15 +1636,6 @@ static void draw_drives_info(void)
       else  sprintf(devSizeStr, "%.2f GB", (double) (devSize / 1073741824.00f));
 
       sprintf(drivestr[j], "%s :  %s / %s", drivepath, freeSizeStr, devSizeStr);
-
-      if (strncmp("dev_hdd", dir.d_name, 7) == 0)
-        drive_type[j] = 1;
-      else if (strncmp("dev_usb", dir.d_name, 7) == 0)
-        drive_type[j] = 2;
-      else if (strncmp("dev_blind", dir.d_name, 9) == 0 )
-        drive_type[j] = 3;
-      else if ((strncmp("dev_sd", dir.d_name, 6) == 0 ) || (strncmp("dev_ms", dir.d_name, 6) == 0 ) ||  (strncmp("dev_cf", dir.d_name, 6) == 0 ))
-        drive_type[j] = 4;
 
       j++; if(j > 5) break;
     }
@@ -1704,7 +1704,7 @@ static void change_current_folder(uint32_t curpad)
 
 static void change_main_menu_options(uint32_t curpad)
 {
-  uint8_t last_opt = ((line==0) ? 2 : (line==1) ? 6 : (line==9) ? 4 : (line==2) ? 3 : (line==6 || line==0xB) ? 1 : 0);
+  uint8_t last_opt = ((line==0) ? 2 : (line==1) ? 6 : (line==9) ? 4 : (line==2) ? 3 : (line==3) ? 5 : (line==6 || line==0xB) ? 1 : 0);
 
   if(curpad & PAD_RIGHT) ++entry_mode[line];
   else
@@ -1736,6 +1736,10 @@ static void change_main_menu_options(uint32_t curpad)
                                             (opt == 2) ? "2: Fan Mode\0"    :
                                             (opt == 3) ? "2: System Info\0" :
                                                          "2: Fan (+)\0"));
+   break;
+
+   case 0x3: sprintf(entry_str[view][line], "3: Refresh XML"); if(opt) sprintf(entry_str[view][line] + 14, " (%i)", (opt==5) ? 0 : opt);
+
    break;
 
    case 0x6: strcpy(entry_str[view][line], ((opt) ? "6: Screenshot (XMB + Menu)\0"  :

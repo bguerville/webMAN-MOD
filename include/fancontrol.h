@@ -61,7 +61,7 @@ static void fan_control(u8 set_fanspeed, u8 initial)
 
 				backup[1]=peekq(set_fan_policy_offset);
 				backup[2]=peekq(get_fan_policy_offset);
-				lv2poke32(get_fan_policy_offset, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78
+				lv2poke32(get_fan_policy_offset, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 				lv2poke32(set_fan_policy_offset, 0x38600001); // sys 389 set_fan_policy
 
 				sys_sm_set_fan_policy(0, 2, 0x33);
@@ -111,7 +111,7 @@ static void restore_fan(u8 set_ps2_temp)
 		{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
 		pokeq(set_fan_policy_offset, backup[1]);  // sys 389 set_fan_policy
-		pokeq(get_fan_policy_offset, backup[2]);  // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78
+		pokeq(get_fan_policy_offset, backup[2]);  // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 
 		{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
