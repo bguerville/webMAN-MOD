@@ -972,7 +972,7 @@ continue_reading_folder_xml:
 						 XML_PAIR("icon","%s")
 						 XML_PAIR("title","%s")
 						 XML_PAIR("info","%s") "%s",
-						 add_xmbm_plus ? "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/tools.png" : wm_icons[10],
+						 add_xmbm_plus ? "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png" : wm_icons[10],
 						 STR_WMSETUP, STR_WMSETUP2, WEB_LINK_PAIR); strcat(myxml, templn);
 
 		if(add_xmbm_plus)
