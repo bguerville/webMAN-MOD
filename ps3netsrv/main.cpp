@@ -23,7 +23,7 @@
 
 #define MIN(a, b)	((a) <= (b) ? (a) : (b))
 
-#define MERGE_DRIVES 1
+//#define MERGE_DRIVES 1
 
 enum
 {
@@ -251,9 +251,9 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 #ifdef WIN32
-	#ifdef MERGE_DRIVES
 	int pos = strlen(p) - 1; if(pos > 0 && p[pos] == '/') p[pos] = 0;
 
+	#ifdef MERGE_DRIVES
 	file_stat_t st;
 	if (stat_file(p, &st) < 0)
 	{

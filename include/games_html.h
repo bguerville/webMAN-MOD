@@ -138,6 +138,8 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 		}
 	}
 
+	const char ext[4][5] = {".jpg", ".png", ".PNG", ".JPG"};
+
 	if(isdir || ns>=0)
 		{get_name(icon, file, 1); strcat(icon, ".PNG");} //wmtmp
 	else
@@ -152,8 +154,6 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 
 		if(flen>2 && icon[flen-2]=='.' ) {flen-=2; icon[flen] = NULL;} // remove file extension (split iso)
 		if(flen>4 && icon[flen-4]=='.' ) {flen-=4; icon[flen] = NULL;} // remove file extension
-
-		const char ext[4][5] = {".jpg", ".png", ".PNG", ".JPG"};
 
 		//file name + ext
 		for(u8 e = 0; e < 4; e++)
@@ -188,17 +188,20 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 
 #ifndef LITE_EDITION
 		copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
-
 		if(file_exists(icon)) return;
 
-		icon[strlen(icon)-4] = NULL; strcat(icon, ".png");
-		if(file_exists(icon)) return;
+		for(u8 e = 1; e < 4; e++)
+		{
+			icon[strlen(icon)-4] = NULL; strcat(icon, ext[e]);
+			if(file_exists(icon)) return;
 
-		tempstr[strlen(tempstr)-4] = NULL; strcat(tempstr, ".png");
+			tempstr[strlen(tempstr)-4] = NULL; strcat(tempstr, ext[e]);
 
-		//Copy remote icon locally
-		copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
-		if(file_exists(icon)) return;
+			//Copy remote icon locally
+			copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
+			if(file_exists(icon)) return;
+		}
+
 #endif //#ifndef LITE_EDITION
 
 #endif //#ifdef COBRA_ONLY
@@ -353,6 +356,12 @@ static void get_folder_icon(char *icon, u8 f1, u8 is_iso, char *param, char *ent
 			if(file_exists(icon)) return;
 
 			get_name(icon, entry_name, 1); strcat(icon, ".png");
+			if(file_exists(icon)) return;
+
+			get_name(icon, entry_name, 1); strcat(icon, ".PNG");
+			if(file_exists(icon)) return;
+
+			get_name(icon, entry_name, 1); strcat(icon, ".JPG");
 			if(file_exists(icon)==false) icon[0] = NULL;
 		}
 	}
@@ -376,7 +385,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		//if(!strstr(param, "/GAME")) return FAILED;
 	}
 
-	icon[0]=tempID[0] = NULL;
+	icon[0] = tempID[0] = NULL;
 
 
 	if(IS_PS3_TYPE) //PS3 games only (0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video")
@@ -400,25 +409,25 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{
 		char iso_ext[4][4] = {"iso", "bin", "mdf", "img"};
-		for(u8 e=0; e<5; e++)
+		for(u8 e = 0; e < 5; e++)
 		{
-			if(e>=4) return FAILED;
+			if(e >= 4) return FAILED;
 
 			sprintf(tempstr, "%s/%s/%s.%s", param, data[v3_entry].name, data[v3_entry].name, iso_ext[e]);
 			if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)==0) break;
 		}
 
-		u8 index = 2;
+		u8 index = 4;
 
 		// cover: folder/filename.jpg
-		char img_ext[2][8] = {".jpg\0", ".png\0"};
-		for(u8 e=0; e<2; e++)
+		char img_ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
+		for(u8 e = 0; e < 4; e++)
 		{
 			sprintf(enc_dir_name, "%s/%s/%s%s", param, data[v3_entry].name, data[v3_entry].name, img_ext[e]);
 			if(remote_stat(ns, enc_dir_name, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)==0) {index = e; break;}
 		}
 
-		if(index<2)
+		if(index < 4)
 		{
 			get_name(icon, data[v3_entry].name, 1); strcat(icon, img_ext[index]);
 			copy_net_file(icon, enc_dir_name, ns, COPY_WHOLE_FILE);

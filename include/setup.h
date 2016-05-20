@@ -505,12 +505,12 @@ static void setup_form(char *buffer, char *templn)
     if(!webman_config->vPSID1[0] && !webman_config->vPSID1[1]) {get_idps_psid(); sprintf(webman_config->vPSID1, "%016llX", PSID[0]); sprintf(webman_config->vPSID2, "%016llX", PSID[1]);}
 
 	add_check_box("id1", "1", "IDPS", " : ", (webman_config->sidps), buffer);
-	sprintf(templn, HTML_INPUT("vID1", "%s", "16", "22")       , webman_config->vIDPS1); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("vID1", "%s", "16", "22"), webman_config->vIDPS1); strcat(buffer, templn);
 	sprintf(templn, HTML_INPUT("vID2", "%s", "16", "22"), webman_config->vIDPS2); strcat(buffer, templn);
     sprintf(templn, HTML_BUTTON_FMT "<br>", HTML_BUTTON, " ", "onclick=\"vID2.value=", "1000000000000000"); strcat(buffer, templn);
 
 	add_check_box("id2", "1", "PSID", " : ", (webman_config->spsid), buffer);
-	sprintf(templn, HTML_INPUT("vPS1", "%s", "16", "22")       , webman_config->vPSID1); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("vPS1", "%s", "16", "22"), webman_config->vPSID1); strcat(buffer, templn);
 	sprintf(templn, HTML_INPUT("vPS2", "%s", "16", "22"), webman_config->vPSID2); strcat(buffer, templn);
     sprintf(templn, HTML_BUTTON_FMT "<br><br>", HTML_BUTTON, " ", "onclick=\"vPS1.value=vPS2.value=", "0000000000000000"); strcat(buffer, templn);
 #else
@@ -754,7 +754,7 @@ static void setup_form(char *buffer, char *templn)
 					"</form>", STR_SAVE); strcat(buffer, templn);
 
 	strcat(buffer,  HTML_RED_SEPARATOR
-					"<a href=\"http://github.com/Matsumot0/webMAN-MOD/releases\">webMAN-MOD - Latest version of webMAN-MOD on Github</a><br>"
+					"<a href=\"http://github.com/aldostools/webMAN-MOD/releases\">webMAN-MOD - Latest version of webMAN-MOD on Github</a><br>"
 					"<a href=\"http://www.psx-place.com/forum/showthread.php?t=27\">webMAN-MOD - Main thread of webMAN-MOD on Psx-place</a><br>");
 
 /*
