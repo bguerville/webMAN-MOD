@@ -10,6 +10,9 @@
 #define STR_NOITEM_PAIR			XML_PAIR("str_noitem", "msg_error_no_content") "</Table>"
 
 #define LAUNCHPAD_FILE_XML		"/dev_hdd0/tmp/wm_launchpad.xml"
+#define LAUNCHPAD_MAX_ITEMS		150
+#define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
+//#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
 
 static void refresh_xml(char *msg)
 {
@@ -26,11 +29,11 @@ static void refresh_xml(char *msg)
 }
 
 #ifdef LAUNCHPAD
-u32 mtrl_item;
+u32 mtrl_items = 0;
 
 static void add_launchpad_header(void)
 {
-	int fd; mtrl_item = 0;
+	int fd; mtrl_items = 0;
 
 	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_OK)
 	{
@@ -46,39 +49,65 @@ static void add_launchpad_header(void)
 	}
 }
 
-static void add_launchpad_entry(char *tempstr, char *icon, char *templn, char *url)
+static void add_launchpad_entry(char *tempstr, char *temp, const char *templn, const char *url, const char *tempID)
 {
+	if(mtrl_items >= LAUNCHPAD_MAX_ITEMS) return;
+
 	int fd;
 
 	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 	{
-		mtrl_item++;
-
 		// add entry
-		sprintf(tempstr, "<mtrl anno=\"picks=1\" from=\"2016-01-01T00:00:00.000Z\" id=\"%i\" lastm=\"2016-01-01T00:00:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
+		sprintf(tempstr, "<mtrl anno=\"picks=1\" from=\"2016-01-01T00:00:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
 						 "<name></name><owner></owner>\n"
 						 "<desc>%s</desc>\n"
-						 "<url type=\"2\">http://127.0.0.1%s</url>\n"
-						 "<target type=\"u\">%s</target>\n\n", (1080000000UL + mtrl_item), templn, icon, url);
+						 "<url type=\"2\">%s/%s%s</url>\n"
+						 "<target type=\"u\">%s</target>\n", templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
 
 		uint64_t size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, &size);
 
 		// add countries
-		char country[71][3] = {"ar","at","au","be","bg","bh","bo","br","ca","ch","cl","cn","co","cr","cy","cz","de","dk","ec","es","fi","fr","gb","gr","gt","hk","hn","hr","hu","id","ie","il","in","is","it","jp","kr","kw","lb","lu","mt","mx","my","ni","nl","no","nz","om","pa","pe","ph","pl","pt","py","qa","ro","ru","sa","se","sg","si","sk","sv","th","tr","tw","ua","um","us","uy","za"};
+		char country[69][3] = {"ae","ar","at","au","be","bg","bh","bo","br","ca","ch","cl","co","cr","cy","cz","de","dk","ec","es","fi","fr","gb","gr","gt","hk","hn","hr","hu","id","ie","il","in","is","it","jp","kr","kw","lb","lu","mt","mx","my","ni","nl","no","nz","om","pa","pe","pl","pt","py","qa","ro","ru","sa","se","sg","si","sk","sv","th","tr","tw","ua","us","uy","za"};
 
 		memset(tempstr, 0, _2KB_); u32 offset = 0;
-		for(u8 c = 0; c < 71; c++)
+		for(u8 c = 0; c < 69; c++)
 		{
-			sprintf(icon, "<cntry agelmt=\"0\">%s</cntry>", country[c]); strcat(tempstr + offset, icon); offset += strlen(icon);
+			sprintf(temp, "<cntry agelmt=\"0\">%s</cntry>", country[c]); strcat(tempstr + offset, temp); offset += 28;
 		}
-		strcat(tempstr + offset, "\n<lang>all</lang></mtrl>\n\n"); icon[0]=0;
+		strcat(tempstr + offset, "\n<lang>all</lang></mtrl>\n"); temp[0]=0;
 
 		size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, &size);
 
 		cellFsClose(fd);
+
+		mtrl_items++;
 	}
+}
+
+static void add_launchpad_extras(char *tempstr, char *url)
+{
+	char temp[40];
+
+	// --- launchpad extras
+	sprintf(url, "http://%s/setup.ps3", local_ip);
+	add_launchpad_entry(tempstr, temp, "WebMAN Setup", url, "setup.png");
+
+	sprintf(url, "http://%s/mount.ps3/unmount", local_ip);
+	add_launchpad_entry(tempstr, temp, "Unmount", url, "eject.png");
+
+	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
+	add_launchpad_entry(tempstr, temp, "Clear Recently Played", url, "clear.png");
+
+	sprintf(url, "http://%s/refresh.ps3", local_ip);
+	add_launchpad_entry(tempstr, temp, "Refresh My WebMAN Games", url, "refresh.png");
+
+	sprintf(url, "http://%s/restart.ps3", local_ip);
+	add_launchpad_entry(tempstr, temp, "Restart PS3", url, "restart.png");
+
+	sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
+	add_launchpad_entry(tempstr, temp, "Clear LaunchPad Cache", url, "cache.png");
 }
 
 static void add_launchpad_footer(void)
@@ -88,7 +117,7 @@ static void add_launchpad_footer(void)
 	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 	{
 		char tempstr[20];
-		sprintf(tempstr, "\n</spc></nsx>\n");
+		sprintf(tempstr, "</spc></nsx>");
 
 		uint64_t size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, &size);
@@ -433,6 +462,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	led(YELLOW, BLINK_FAST);
 
 #ifdef LAUNCHPAD
+	del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
 	add_launchpad_header();
 #endif
 
@@ -609,7 +639,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
  #ifdef LAUNCHPAD
 						sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
-						add_launchpad_entry(tempstr, icon, templn, url);
+						add_launchpad_entry(tempstr, icon, templn, url, tempID);
  #endif
 
 						v3_entry++;
@@ -748,7 +778,7 @@ next_xml_entry:
 
  #ifdef LAUNCHPAD
 							sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
-							add_launchpad_entry(tempstr, icon, templn, url);
+							add_launchpad_entry(tempstr, icon, templn, url, tempID);
  #endif
 						}
 //////////////////////////////
@@ -1059,14 +1089,7 @@ continue_reading_folder_xml:
 
 #ifdef LAUNCHPAD
 	// --- launchpad footer
-	sprintf(url, "http://%s/setup.ps3", local_ip);
-	add_launchpad_entry(tempstr, wm_icons[10], STR_WMSETUP, url);
-
-	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
-	add_launchpad_entry(tempstr, wm_icons[11], STR_EJECTDISC, url);
-
-	sprintf(url, "http://%s/refresh.ps3", local_ip);
-	add_launchpad_entry(tempstr, wm_icons[10], STR_REFRESH, url);
+	add_launchpad_extras(tempstr, url);
 
 	add_launchpad_footer();
 #endif
