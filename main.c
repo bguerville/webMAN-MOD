@@ -422,7 +422,8 @@ typedef struct
 	char ftp_password[20];
 	uint8_t  netd;
 	uint16_t netp;
-	char padding[100];
+	uint8_t  launchpad_xml;
+	char padding[99];
 } __attribute__((packed)) WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];

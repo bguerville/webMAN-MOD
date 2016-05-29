@@ -58,8 +58,7 @@ static void add_launchpad_entry(char *tempstr, char *temp, const char *templn, c
 	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 	{
 		// add entry
-		sprintf(tempstr, "<mtrl anno=\"picks=1\" from=\"2016-01-01T00:00:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
-						 "<name></name><owner></owner>\n"
+		sprintf(tempstr, "<mtrl until=\"2100-12-31T23:59:00.000Z\">\n"
 						 "<desc>%s</desc>\n"
 						 "<url type=\"2\">%s/%s%s</url>\n"
 						 "<target type=\"u\">%s</target>\n", templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
@@ -462,9 +461,9 @@ static bool update_mygames_xml(u64 conn_s_p)
 	led(YELLOW, BLINK_FAST);
 
 #ifdef LAUNCHPAD
-	bool is_rebug = isDir("/dev_flash/rebug");
+	bool launchpad_xml = isDir("/dev_flash/rebug") && !(webman_config->launchpad_xml);
 
-	if(is_rebug)
+	if(launchpad_xml)
 	{
 		del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
 		add_launchpad_header();
@@ -643,7 +642,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
-						if(is_rebug)
+						if(launchpad_xml)
 						{
 							sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
 							add_launchpad_entry(tempstr, icon, templn, url, tempID);
@@ -785,7 +784,7 @@ next_xml_entry:
 							if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
-							if(is_rebug)
+							if(launchpad_xml)
 							{
 								sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
 								add_launchpad_entry(tempstr, icon, templn, url, tempID);
@@ -1100,7 +1099,7 @@ continue_reading_folder_xml:
 
 #ifdef LAUNCHPAD
 	// --- launchpad footer
-	if(is_rebug)
+	if(launchpad_xml)
 	{
 		add_launchpad_extras(tempstr, url);
 		add_launchpad_footer();
