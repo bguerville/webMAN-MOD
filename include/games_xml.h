@@ -49,7 +49,7 @@ static void add_launchpad_header(void)
 	}
 }
 
-static void add_launchpad_entry(char *tempstr, char *temp, const char *templn, const char *url, const char *tempID)
+static void add_launchpad_entry(char *tempstr, const char *templn, const char *url, const char *tempID)
 {
 	if(mtrl_items >= LAUNCHPAD_MAX_ITEMS) return;
 
@@ -58,25 +58,14 @@ static void add_launchpad_entry(char *tempstr, char *temp, const char *templn, c
 	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 	{
 		// add entry
-		sprintf(tempstr, "<mtrl until=\"2100-12-31T23:59:00.000Z\">\n"
+		sprintf(tempstr, "<mtrl id=\"%i\" until=\"2100-12-31T23:59:00.000Z\">\n"
 						 "<desc>%s</desc>\n"
 						 "<url type=\"2\">%s/%s%s</url>\n"
-						 "<target type=\"u\">%s</target>\n", templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
+						 "<target type=\"u\">%s</target>\n"
+						 "<cntry agelmt=\"0\">all</cntry>\n"
+						 "<lang>all</lang></mtrl>\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
 
 		uint64_t size = strlen(tempstr);
-		cellFsWrite(fd, tempstr, size, &size);
-
-		// add countries
-		char country[69][3] = {"ae","ar","at","au","be","bg","bh","bo","br","ca","ch","cl","co","cr","cy","cz","de","dk","ec","es","fi","fr","gb","gr","gt","hk","hn","hr","hu","id","ie","il","in","is","it","jp","kr","kw","lb","lu","mt","mx","my","ni","nl","no","nz","om","pa","pe","pl","pt","py","qa","ro","ru","sa","se","sg","si","sk","sv","th","tr","tw","ua","us","uy","za"};
-
-		memset(tempstr, 0, _2KB_); u32 offset = 0;
-		for(u8 c = 0; c < 69; c++)
-		{
-			sprintf(temp, "<cntry agelmt=\"0\">%s</cntry>", country[c]); strcat(tempstr + offset, temp); offset += 28;
-		}
-		strcat(tempstr + offset, "\n<lang>all</lang></mtrl>\n"); temp[0]=0;
-
-		size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, &size);
 
 		cellFsClose(fd);
@@ -87,26 +76,24 @@ static void add_launchpad_entry(char *tempstr, char *temp, const char *templn, c
 
 static void add_launchpad_extras(char *tempstr, char *url)
 {
-	char temp[40];
-
 	// --- launchpad extras
 	sprintf(url, "http://%s/setup.ps3", local_ip);
-	add_launchpad_entry(tempstr, temp, "WebMAN Setup", url, "setup.png");
+	add_launchpad_entry(tempstr, "WebMAN Setup", url, "setup.png");
 
 	sprintf(url, "http://%s/mount.ps3/unmount", local_ip);
-	add_launchpad_entry(tempstr, temp, "Unmount", url, "eject.png");
+	add_launchpad_entry(tempstr, "Unmount", url, "eject.png");
 
 	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
-	add_launchpad_entry(tempstr, temp, "Clear Recently Played", url, "clear.png");
+	add_launchpad_entry(tempstr, "Clear Recently Played", url, "clear.png");
 
 	sprintf(url, "http://%s/refresh.ps3", local_ip);
-	add_launchpad_entry(tempstr, temp, "Refresh My WebMAN Games", url, "refresh.png");
+	add_launchpad_entry(tempstr, "Refresh My WebMAN Games", url, "refresh.png");
 
 	sprintf(url, "http://%s/restart.ps3", local_ip);
-	add_launchpad_entry(tempstr, temp, "Restart PS3", url, "restart.png");
+	add_launchpad_entry(tempstr, "Restart PS3", url, "restart.png");
 
 	sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
-	add_launchpad_entry(tempstr, temp, "Clear LaunchPad Cache", url, "cache.png");
+	add_launchpad_entry(tempstr, "Clear LaunchPad Cache", url, "cache.png");
 }
 
 static void add_launchpad_footer(void)
@@ -645,7 +632,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if(launchpad_xml)
 						{
 							sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
-							add_launchpad_entry(tempstr, icon, templn, url, tempID);
+							add_launchpad_entry(tempstr, templn, url, tempID);
 						}
  #endif
 
@@ -787,7 +774,7 @@ next_xml_entry:
 							if(launchpad_xml)
 							{
 								sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
-								add_launchpad_entry(tempstr, icon, templn, url, tempID);
+								add_launchpad_entry(tempstr, templn, url, tempID);
 							}
  #endif
 						}
