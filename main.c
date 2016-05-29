@@ -305,7 +305,6 @@ typedef struct {
 	uint32_t avail;
 } _meminfo;
 
-//static bool is_rebug = false;
 static u8 profile = 0;
 
 static u8 loading_html = 0;
@@ -2309,7 +2308,7 @@ static void wwwd_thread(uint64_t arg)
 	cellFsUnlink((char*)WMREQUEST_FILE);
 #endif
 
-	{from_reboot = file_exists(WMNOSCAN);} //is_rebug=isDir("/dev_flash/rebug");
+	{from_reboot = file_exists(WMNOSCAN);}
 
 	if(webman_config->blind) enable_dev_blind(NULL);
 

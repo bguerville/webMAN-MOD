@@ -29,7 +29,7 @@ static void refresh_xml(char *msg)
 }
 
 #ifdef LAUNCHPAD
-u32 mtrl_items = 0;
+static u32 mtrl_items = 0;
 
 static void add_launchpad_header(void)
 {
@@ -462,8 +462,13 @@ static bool update_mygames_xml(u64 conn_s_p)
 	led(YELLOW, BLINK_FAST);
 
 #ifdef LAUNCHPAD
-	del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
-	add_launchpad_header();
+	bool is_rebug = isDir("/dev_flash/rebug");
+
+	if(is_rebug)
+	{
+		del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
+		add_launchpad_header();
+	}
 #endif
 
 	int ns=-2; u8 uprofile=profile;
@@ -638,8 +643,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
-						sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
-						add_launchpad_entry(tempstr, icon, templn, url, tempID);
+						if(is_rebug)
+						{
+							sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
+							add_launchpad_entry(tempstr, icon, templn, url, tempID);
+						}
  #endif
 
 						v3_entry++;
@@ -777,8 +785,11 @@ next_xml_entry:
 							if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
-							sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
-							add_launchpad_entry(tempstr, icon, templn, url, tempID);
+							if(is_rebug)
+							{
+								sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
+								add_launchpad_entry(tempstr, icon, templn, url, tempID);
+							}
  #endif
 						}
 //////////////////////////////
@@ -1089,9 +1100,11 @@ continue_reading_folder_xml:
 
 #ifdef LAUNCHPAD
 	// --- launchpad footer
-	add_launchpad_extras(tempstr, url);
-
-	add_launchpad_footer();
+	if(is_rebug)
+	{
+		add_launchpad_extras(tempstr, url);
+		add_launchpad_footer();
+	}
 #endif
 
 	// --- release allocated memory
