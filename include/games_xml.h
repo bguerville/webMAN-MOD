@@ -124,6 +124,8 @@ static void add_launchpad_footer(char *tempstr)
 						 "<desc></desc>\n"
 						 "<url type=\"2\"></url>\n"
 						 "<target type=\"u\"></target>\n"
+						 "<cntry agelmt=\"0\">all</cntry>\n"
+						 "<lang>all</lang></mtrl>\n\n"
 						 "</spc></nsx>");
 
 		uint64_t size = strlen(tempstr);
