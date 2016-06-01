@@ -650,7 +650,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
-						if(launchpad_xml && (mtrl_items >= LAUNCHPAD_MAX_ITEMS))
+						if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
 						{
 							sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
 							add_launchpad_entry(tempstr, templn, url, tempID);
@@ -792,7 +792,7 @@ next_xml_entry:
 							if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
-							if(launchpad_xml && (mtrl_items >= LAUNCHPAD_MAX_ITEMS))
+							if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
 							{
 								sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
 								add_launchpad_entry(tempstr, templn, url, tempID);
