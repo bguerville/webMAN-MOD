@@ -27,7 +27,7 @@
 #define WM_REQUEST		1	// accept commands via local file /dev_hdd0/tmp/wm_request  (required by VSH Menu for webMAN)
 #define GET_KLICENSEE	1	// /klic.ps3
 #define PS3_BROWSER		1	// /browser.ps3 / open browser combos
-
+#define PKG_HANDLER     1   // /pkg.ps3 / lauch pkg download/install
 //// EXTRA FEATURES ////
 //#define XMB_SCREENSHOT	1	// screenshot XMB using L2 + R2 + SELECT + START
 //#define AUTO_EJECT_DISC	1	// eject disc holding SELECT on mount
