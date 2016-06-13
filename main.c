@@ -485,7 +485,7 @@ game_ext_plugin_interface * game_ext_interface;
 char pkg_path[MAX_PATH_LEN];
 wchar_t pkg_dpath[MAX_PATH_LEN];
 wchar_t pkg_durl[MAX_PATH_LEN];
-int wmget=0;
+bool wmget=false;
 
 #define DEFAULT_PKG_PATH 		L"/dev_hdd0/packages/"
 #define INT_HDD_ROOT_PATH 		L"/dev_hdd0/"
@@ -907,11 +907,11 @@ static void handleclient(u64 conn_s_p)
 
 	if (wm_request>0)
 	{
-		wmget=1;
+		wmget=true;
 	}
 	else
 	{
-		wmget=0;
+		wmget=false;
 	}
 
 	if(!wm_request)
@@ -1348,7 +1348,7 @@ again3:
 
 end_download_process:
 #ifdef WM_REQUEST
-					if(wmget>0) sclose(&conn_s);
+					if(wmget==true) sclose(&conn_s);
 					else
 					{	
 #endif
@@ -1411,7 +1411,7 @@ end_download_process:
 					}
 
 #ifdef WM_REQUEST
-					if(wmget>0)
+					if(wmget==true)
 					{
 						show_msg((char *)msg);
 						sclose(&conn_s);
@@ -1429,7 +1429,7 @@ end_download_process:
 				{
 
 #ifdef WM_REQUEST
-					if(wmget>0)
+					if(wmget==true)
 					{
 						show_msg((char *)"Web Command Syntax error");
 						sclose(&conn_s);
