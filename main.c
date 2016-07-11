@@ -1186,6 +1186,7 @@ again3:
 							
 							if(conv_num_dpath>0)
 							{
+								/*
 									sprintf(msg_dpath,"File will be downloaded in %ls\n", pkg_dpath);
 									sprintf(msg_durl,"Attempting to download URL: %ls\n", pkg_durl);
 									
@@ -1200,10 +1201,7 @@ again3:
 									uri.password="";
 									uri.path="/urlpath";
 									uri.port=80;
-									//uri.reserved={0,0,0,0};
 									
-									//void *uriPool;
-									//size_t poolSize = 0;
 									int code = 0;
 									int ret;
 									ret = cellHttpCreateClient(&client);
@@ -1214,6 +1212,8 @@ again3:
 									sprintf(msg_durl,"URL is invalid.\nReturn value: %d\n Error code: %d\n",ret,code);
 									show_msg(msg_durl);
 									goto end_download_process;
+									
+				*/
 				/*					//test if url is valid???
 
 								#define REQUEST_URI  "http://www.scei.co.jp/"
