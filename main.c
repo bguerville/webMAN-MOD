@@ -1110,7 +1110,12 @@ again3:
 					size_t ptemp_len=strlen((const char *)ptemp);
 					size_t pdpath_len=strlen((const char *)pdpath);
 					size_t pdurl_len=dparam_len-ptemp_len-5;
-
+					
+					//Debug message snippet
+					char msg_debug[MAX_PATH_LEN]="";
+					sprintf(msg_debug,"Debug msg1:\npdpath: %s\npdurl: %s", pdpath, pdurl);
+                    show_msg((char*)msg_debug); //debug msg
+					//
 					if(pdurl_len<MAX_PATH_LEN)
 					{
 						memset(pdurl,0,pdurl_len+1);
@@ -1125,6 +1130,10 @@ again3:
 
 						if(conv_num_durl>0)  
 						{
+							char msg_debug2[MAX_PATH_LEN]="";
+					        sprintf(msg_debug2,"Debug msg2:\nURL characters converted: %d", conv_num_durl);
+							show_msg((char*)msg_debug2); //debug msg
+							
 							//To do: check if url is valid before launching download
 							if((pdpath_len<MAX_PATH_LEN) && isDir((const char *)pdpath))
 							{
@@ -1144,6 +1153,8 @@ again3:
 									if(isDir((const char *)DEFAULT_PKG_PATH))
 									{
 										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)DEFAULT_PKG_PATH,strlen((const char *)DEFAULT_PKG_PATH)+1);
+									    sprintf(msg_dpath,"Debug msg3:Given storage path: %ls", pkg_dpath);
+								
 									}
 									else
 									{
@@ -1159,6 +1170,8 @@ again3:
 										}
 									}
 								}
+								sprintf(msg_dpath,"Debug msg3:\nChosen storage path: %ls", pkg_dpath);
+								//show_msg((char *)msg_dpath);
 							}
 							else
 							{
@@ -1180,9 +1193,11 @@ again3:
 										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
 									}
 								}	
-								sprintf(msg_dpath,"The given path was too long.\nThe downloaded file will be located in %ls\n", pkg_dpath);
-								show_msg(msg_dpath);
+								sprintf(msg_dpath,"The given path was too long.\nThe downloaded file will be located in %ls", pkg_dpath);
+								//show_msg((char *)msg_dpath);
 							}
+							
+								show_msg((char *)msg_dpath);
 							
 							if(conv_num_dpath>0)
 							{
@@ -1325,22 +1340,22 @@ again3:
 								*/	
 								LoadPluginById(0x29,(void *)downloadPKG_thread);
 								
-								sprintf(msg_dpath,"Downloaded file stored at %ls\n", pkg_dpath);
-								sprintf(msg_durl,"Success. Attempting to download URL: %ls\n", pkg_durl);
+								sprintf(msg_dpath,"Downloaded file stored at %ls", pkg_dpath);
+								sprintf(msg_durl,"Success. Attempting to download URL: %ls", pkg_durl);
 								goto end_download_process;
 							}
 							else
 							{
 									sprintf(msg_dpath,"All attempts to set a location to save the file have failed\nDownload is cancelled");
-									sprintf(msg_durl,"Attempt to download URL: %ls failed\n", pkg_durl);
+									sprintf(msg_durl,"Attempt to download URL: %ls failed", pkg_durl);
 									goto end_download_process;
 							}
 						}
 					}
 					else
 					{
-						sprintf(msg_dpath,"File download to %ls is cancelled\n", pkg_dpath);
-						sprintf(msg_durl,"Invalid URL: %ls\n", pkg_durl);
+						sprintf(msg_dpath,"File download to %ls is cancelled", pkg_dpath);
+						sprintf(msg_durl,"Invalid URL: %ls", pkg_durl);
 						goto end_download_process;
 					}				
 
@@ -1349,8 +1364,8 @@ end_download_process:
 #ifdef WM_REQUEST
 					if(wmget==true) sclose(&conn_s);
 					else
+#endif						
 					{	
-#endif
 						http_response(conn_s, header, param, 200, (char*)strcat(msg_durl,msg_dpath));
 
 					}
@@ -1388,7 +1403,7 @@ if(islike(param, "/install.ps3"))
 						if(pext!=NULL)
 						{
 							
-							if (strcmp(pext+1, (const char *)"pkg"))//check if file has a .pkg extension or not and treat accordingly
+							if (strcmp(pext+1, (const char *)"pkg")==0)//check if file has a .pkg extension or not and treat accordingly
 							{
 								/*		if (View_Find("webrender_plugin")) 
 								{
