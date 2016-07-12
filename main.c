@@ -1092,9 +1092,9 @@ again3:
 			}
 
 #ifdef PKG_HANDLER
-			if(islike(param, "/pkg.ps3"))
+			if(islike(param, "/download.ps3"))
 			{
-				if(islike(param+8, "$downloadfrom="))
+				if(islike(param+13, "?url="))
 				{
 					char msg_durl[MAX_PATH_LEN]="";  //////Conversion Debug msg
 					char msg_dpath[MAX_PATH_LEN]="";  //////Conversion Debug msg
@@ -1104,19 +1104,19 @@ again3:
 					size_t conv_num_durl=0;
 					size_t conv_num_dpath=0;
 					size_t i;
-					size_t dparam_len=strlen((const char *)param+8);
-					ptemp=strstr(param,"&downloadto=");
-					pdpath=ptemp+12;
+					size_t dparam_len=strlen((const char *)param+13);
+					ptemp=strstr(param,"&to=");
+					pdpath=ptemp+4;
 					size_t ptemp_len=strlen((const char *)ptemp);
 					size_t pdpath_len=strlen((const char *)pdpath);
-					size_t pdurl_len=dparam_len-ptemp_len-14;
+					size_t pdurl_len=dparam_len-ptemp_len-5;
 
 					if(pdurl_len<MAX_PATH_LEN)
 					{
 						memset(pdurl,0,pdurl_len+1);
 						for(i=0;i<pdurl_len;i++)
 						{
-							pdurl[i]=param[i+22];
+							pdurl[i]=param[i+18];
 						}
 						pdurl[pdurl_len]='\0';
 						wmemset(pkg_dpath,0,MAX_PATH_LEN);
@@ -1180,7 +1180,7 @@ again3:
 										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
 									}
 								}	
-								sprintf(msg_dpath,"The given path was invalid.\nThe downloaded file will be located in %ls\n", pkg_dpath);
+								sprintf(msg_dpath,"The given path was too long.\nThe downloaded file will be located in %ls\n", pkg_dpath);
 								show_msg(msg_dpath);
 							}
 							
@@ -1324,6 +1324,9 @@ again3:
 								}
 								*/	
 								LoadPluginById(0x29,(void *)downloadPKG_thread);
+								
+								sprintf(msg_dpath,"Downloaded file stored at %ls\n", pkg_dpath);
+								sprintf(msg_durl,"Success. Attempting to download URL: %ls\n", pkg_durl);
 								goto end_download_process;
 							}
 							else
@@ -1341,22 +1344,13 @@ again3:
 						goto end_download_process;
 					}				
 
-					/*	char dmsg1[80];
-					sprintf(dmsg1,"Value of wmget: %d",wmget);
-					show_msg((char *)dmsg1);
-					*/
-
+					
 end_download_process:
 #ifdef WM_REQUEST
 					if(wmget==true) sclose(&conn_s);
 					else
 					{	
 #endif
-						/*	
-						TO DO
-						test is ps3 browser is true...to decide whether to send http_response or not
-						if(strstr(header, "x-ps3-browser")) ///Not good!!!	
-						*/	
 						http_response(conn_s, header, param, 200, (char*)strcat(msg_durl,msg_dpath));
 
 					}
@@ -1369,11 +1363,16 @@ end_download_process:
 
 				}
 
+			}
 
 
-				else if(islike(param+8, "$install="))
-				{
-					char *parampath = param + 17;
+
+			
+			
+if(islike(param, "/install.ps3"))
+{
+					
+					char *parampath = param + 12;
 					char msg[MAX_PATH_LEN]="";  //////Conversion Debug msg
 					size_t path_length=strlen(parampath);
 
@@ -1384,7 +1383,12 @@ end_download_process:
 						strcpy(pkg_path,parampath);
 						if(file_exists(pkg_path)) //check if path leads to existing file
 						{
-							if (strcasestr(parampath+path_length-4, (const char *)".pkg"))//check if file has a .pkg extension or not and treat accordingly
+						const char * pext=NULL;
+						pext=strchr(parampath,'.');
+						if(pext!=NULL)
+						{
+							
+							if (strcmp(pext+1, (const char *)"pkg"))//check if file has a .pkg extension or not and treat accordingly
 							{
 								/*		if (View_Find("webrender_plugin")) 
 								{
@@ -1394,11 +1398,19 @@ end_download_process:
 								}
 								*/		
 								LoadPluginById(0x16,(void *)installPKG_thread);
+								sprintf(msg,"The PKG Install command was sent succesfully.");
 							}
 							else 
 							{
 								sprintf(msg,"This file doesn't have a pkg extension\nPath: %s", parampath);
 							}
+						}
+						else 
+							{
+								sprintf(msg,"This file doesn't have an extension\nPath: %s", parampath);
+							}	
+							
+							
 						}
 						else 
 						{
@@ -1443,7 +1455,7 @@ end_download_process:
 					loading_html--;
 					sys_ppu_thread_exit(0);
 				}
-			}
+
 #endif
 
 #ifdef PS3_BROWSER
@@ -3021,6 +3033,9 @@ int wwwd_stop(void)
 		//show_msg((char *)"Last stage before download call");  
 
 		download_interface->DoUnk5(0, pkg_durl, pkg_dpath);
+		//FREE(pkg_durl);
+		//free(pkg_dpath);
+		
 	}
 
 	void installPKG_thread(void)
@@ -3031,6 +3046,7 @@ int wwwd_stop(void)
 		}  
 		game_ext_interface->DoUnk0(NULL); // Load Page
 		game_ext_interface->DoUnk34(pkg_path); // install PKG from path
+		//free(pkg_path);
 	}
 
 #endif
