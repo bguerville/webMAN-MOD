@@ -487,8 +487,8 @@ wchar_t pkg_dpath[MAX_PATH_LEN];
 wchar_t pkg_durl[MAX_PATH_LEN];
 bool wmget=false;
 
-#define DEFAULT_PKG_PATH 		L"/dev_hdd0/packages/"
-#define INT_HDD_ROOT_PATH 		L"/dev_hdd0/"
+#define DEFAULT_PKG_PATH 		"/dev_hdd0/packages/"
+#define INT_HDD_ROOT_PATH 		"/dev_hdd0/"
 
 #endif
 
@@ -1092,118 +1092,159 @@ again3:
 			}
 
 #ifdef PKG_HANDLER
-			if(islike(param, "/download.ps3"))
-			{
-				show_msg((char*)"Download page"); //debug msg
-
-				if(islike(param+13, "?url="))
-				{
+	if(islike(param, "/download.ps3"))
+	{
+				
+		if(islike(param+13, "?url="))
+		{
 					char msg_durl[MAX_PATH_LEN]="";  //////Conversion Debug msg
 					char msg_dpath[MAX_PATH_LEN]="";  //////Conversion Debug msg
-					char *pdpath;
-					char *pdurl=NULL;
-					char *ptemp;
+					char pdpath[MAX_PATH_LEN]="";
+					char pdurl[MAX_PATH_LEN]="";
 					size_t conv_num_durl=0;
 					size_t conv_num_dpath=0;
 					size_t i;
-					show_msg((char*)"Looking for url"); //debug msg
-					size_t dparam_len=strlen((const char *)param+13);
-					ptemp=strstr(param,"&to=");
-					pdpath=ptemp+4;
-					size_t ptemp_len=strlen((const char *)ptemp);
-					size_t pdpath_len=strlen((const char *)pdpath);
-					size_t pdurl_len=dparam_len-ptemp_len-5;
+					size_t pdpath_len;
+					size_t pdurl_len;
+					size_t ptemp_len;
+					size_t dparam_len;
 					
-					//Debug message snippet
-					char msg_debug1[MAX_PATH_LEN]="";
-					sprintf(msg_debug1,"Debug msg1:\npdpath: %s\npdurl: %s", pdpath, pdurl);
-                    show_msg((char*)msg_debug1); //debug msg
-					//
-					if(pdurl_len<MAX_PATH_LEN)
-					{
+					dparam_len=strlen((const char *)param+13);
+					char *ptemp=strstr(param,(const char *)"&to=");
+					//show_msg((char*)ptemp); //debug msg
+		
+			if(ptemp!=NULL)
+			{
+					//show_msg((char*)"ptemp is not null"); //debug msg
+					ptemp_len=strlen((const char *)ptemp);
+					pdpath_len=ptemp_len-4;
+					memset(pdpath,0,pdpath_len+1);
+					strncpy(pdpath,ptemp+4,pdpath_len);
+
+			}
+			else
+			{
+						//show_msg((char*)"No path given"); //debug msg
+					ptemp_len=0;
+					pdpath_len=strlen((const char *)DEFAULT_PKG_PATH);
+					memset(pdpath,0,pdpath_len+1);
+					strncpy(pdpath,(const char *)DEFAULT_PKG_PATH,pdpath_len);
+				/*			
+					char msg_debug2[MAX_PATH_LEN]="";
+					sprintf(msg_debug2,(char *)"Debug msg2:\nPath characters copied: %d", pdpath_len);
+					show_msg((char*)msg_debug2); //debug msg
+				*/
+			}
+					
+					pdurl_len=dparam_len-ptemp_len-5;
+					
+			if((pdurl_len>0) && (pdurl_len<MAX_PATH_LEN))
+			{
+
 						memset(pdurl,0,pdurl_len+1);
-						for(i=0;i<pdurl_len;i++)
-						{
-							pdurl[i]=param[i+18];
-						}
-						pdurl[pdurl_len]='\0';
+						strncpy(pdurl,(const char *)param+18,pdurl_len);
+                        //show_msg((char *)pdurl); //debug msg
+					
 						wmemset(pkg_dpath,0,MAX_PATH_LEN);
 						wmemset(pkg_durl,0,MAX_PATH_LEN); // Use wmemset from stdc.h instead of reinitialising wchar_t with a loop.
 						conv_num_durl=mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl,pdurl_len+1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
-
-						if(conv_num_durl>0)  
-						{
-							char msg_debug2[MAX_PATH_LEN]="";
-					        sprintf(msg_debug2,"Debug msg2:\nURL characters converted: %d", conv_num_durl);
-							show_msg((char*)msg_debug2); //debug msg
-							
+				/*		
+						char msg_debug2[MAX_PATH_LEN]="";
+					    sprintf(msg_debug2,(char *)"Debug msg2:\nURL characters converted: %d\npdurl strlen= %d", conv_num_durl,strlen(pdurl));
+						show_msg((char*)msg_debug2); //debug msg
+				*/		
+				if(conv_num_durl>0)  
+				{
 							//To do: check if url is valid before launching download
-							if((pdpath_len<MAX_PATH_LEN) && isDir((const char *)pdpath))
-							{
+							//show_msg((char*)"Checking storage path"); //debug msg
+					if((pdpath_len>0) && (pdpath_len<MAX_PATH_LEN) && isDir((const char *)pdpath))
+					{
 								//set given path
 								conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)pdpath,pdpath_len+1);
-							}
-							else if(pdpath_len<MAX_PATH_LEN)
-							{
+								sprintf(msg_dpath,"Storage path: %s", pdpath);
+								//show_msg((char*)"Setting path as given"); //debug msg
+					}
+					else if((pdpath_len>0) && (pdpath_len<MAX_PATH_LEN))
+					{
 								//Try to create the folder in proposed path
 								//if success set given path if failure set default path
-								if(cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
-								{
+						if(cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
+						{
 									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)pdpath,pdpath_len+1);
-								}
-								else
-								{
-									if(isDir((const char *)DEFAULT_PKG_PATH))
-									{
-										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)DEFAULT_PKG_PATH,strlen((const char *)DEFAULT_PKG_PATH)+1);
-									    sprintf(msg_dpath,"Debug msg3:Given storage path: %ls", pkg_dpath);
-								
-									}
-									else
-									{
-										//create default dir
-										//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
-										if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
-										{
-											conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)DEFAULT_PKG_PATH,strlen((const char *)DEFAULT_PKG_PATH)+1);
-										}
-										else
-										{
-											conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,"/dev_hdd0",10);
-										}
-									}
-								}
-								sprintf(msg_dpath,"Debug msg3:\nChosen storage path: %ls", pkg_dpath);
-								//show_msg((char *)msg_dpath);
+									sprintf(msg_dpath,"Storage path: %s", pdpath);
+									//show_msg((char*)"Make directory with given path"); //debug msg
+						}
+						else
+						{
+									
+							if(isDir((const char *)DEFAULT_PKG_PATH))
+							{
+									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
+									sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
+									//show_msg((char*)"Setting default pkg path");
 							}
 							else
 							{
-								if(isDir((const char *)DEFAULT_PKG_PATH))
-								{
-									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-								}
-								else
-								{
 									//create default dir
 									//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
 
-									if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
-									{
+								if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
+								{
+										
 										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-									}
-									else
-									{
+										sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
+										//show_msg((char*)"Creating & setting default pkg path");
+								}
+								else
+								{
 										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
-									}
-								}	
-								sprintf(msg_dpath,"The given path was too long.\nThe downloaded file will be located in %ls", pkg_dpath);
-								//show_msg((char *)msg_dpath);
+										sprintf(msg_dpath,"Storage path: %s", (const char *)INT_HDD_ROOT_PATH);
+									/*	char dbg[MAX_PATH_LEN];
+										sprintf(dbg,"Setting hdd root path.\nConverted wchar= %d",conv_num_dpath);
+										show_msg((char*)dbg);
+									*/
+								}
 							}
-							
-								show_msg((char *)msg_dpath);
-							
-							if(conv_num_dpath>0)
+						}
+								
+								//show_msg((char *)msg_dpath);
+					}
+					else
+					{
+									//show_msg((char*)"Setting storage path as none was given"); //debug msg
+						if(isDir((const char *)DEFAULT_PKG_PATH))
+						{
+									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
+									sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
+									//show_msg((char*)"Setting default pkg path");
+						}
+						else
+						{
+									//create default dir
+									//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
+
+							if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
 							{
+										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
+										sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
+										//show_msg((char*)"Creating & setting default pkg path");
+							}
+							else
+							{
+										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
+										sprintf(msg_dpath,"Storage path: %s", (const char *)INT_HDD_ROOT_PATH);
+										char dbg[MAX_PATH_LEN];
+										sprintf(dbg,"Setting hdd root path.\nConverted wchar= %d",conv_num_dpath);
+										//show_msg((char*)dbg);
+							}
+						}	
+								//show_msg((char *)msg_dpath);
+					}
+							
+								//show_msg((char *)msg_dpath);
+							
+					if(conv_num_dpath>0)
+					{
 								/*
 									sprintf(msg_dpath,"File will be downloaded in %ls\n", pkg_dpath);
 									sprintf(msg_durl,"Attempting to download URL: %ls\n", pkg_durl);
@@ -1328,12 +1369,12 @@ again3:
 				*/				
 
 									
-								if (View_Find("webrender_plugin")) 
-								{
+						if (View_Find("webrender_plugin")) 
+						{
 									//show_msg((char *)"webrender_plugin unloading");
 									UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
 									sys_timer_sleep(3);
-								}
+						}
 								/*	if (View_Find("download_plugin")) 
 								{
 								show_msg((char *)"download_plugin unloading");
@@ -1341,69 +1382,77 @@ again3:
 								sys_timer_sleep(3);
 								}
 								*/	
+								//sprintf(msg_dpath,"Downloaded file stored at %ls", pkg_dpath);
+								//sprintf(msg_durl,"Success. Attempting to download URL: %ls", pkg_durl);
+								sprintf(msg_durl,"Success. Attempting to download URL: %s\n", pdurl);
 								LoadPluginById(0x29,(void *)downloadPKG_thread);
 								
-								sprintf(msg_dpath,"Downloaded file stored at %ls", pkg_dpath);
-								sprintf(msg_durl,"Success. Attempting to download URL: %ls", pkg_durl);
 								goto end_download_process;
-							}
-							else
-							{
-									sprintf(msg_dpath,"All attempts to set a location to save the file have failed\nDownload is cancelled");
-									sprintf(msg_durl,"Attempt to download URL: %ls failed", pkg_durl);
-									goto end_download_process;
-							}
-						}
 					}
 					else
 					{
-						sprintf(msg_dpath,"File download to %ls is cancelled", pkg_dpath);
-						sprintf(msg_durl,"Invalid URL: %ls", pkg_durl);
+									sprintf(msg_dpath,"Attempt to set storage location failed");
+									sprintf(msg_durl,"Attempt to download URL: %s cancelled\n", pdurl);
+									goto end_download_process;
+					}
+				}
+				else
+				{
+							sprintf(msg_dpath,"File download to %s is cancelled", pdpath);
+							sprintf(msg_durl,"Invalid URL: %s\n", pdurl);
+							goto end_download_process;
+				}
+			}
+			else
+			{
+						sprintf(msg_dpath,"File download to %s is cancelled", pdpath);
+						sprintf(msg_durl,"Invalid URL: %s\n", pdurl);
 						goto end_download_process;
-					}				
+			}				
 
 					
 end_download_process:
 #ifdef WM_REQUEST
-					if(wmget==true) sclose(&conn_s);
-					else
+				if(wmget==true) sclose(&conn_s);
+				else
 #endif						
-					{	
+				{	
 						http_response(conn_s, header, param, 200, (char*)strcat(msg_durl,msg_dpath));
 
-					}
+				}
 
-					show_msg((char*)strcat(msg_durl,msg_dpath)); //debug msg
+					show_msg((char*)msg_durl); //debug msg
+					show_msg((char*)msg_dpath); //debug msg
 
 					if(sysmem) sys_memory_free(sysmem); //needed??
 					loading_html--;
 					sys_ppu_thread_exit(0);
 
-				}
+		}
 
-			}
+	}
 
-            if(islike(param, "/install.ps3"))
-            {
+    if(islike(param, "/install.ps3"))
+    {
 					
 					char *parampath = param + 12;
 					char msg[MAX_PATH_LEN]="";  //////Conversion Debug msg
 					size_t path_length=strlen(parampath);
 
-					if (path_length<MAX_PATH_LEN)
-					{
+		if (path_length<MAX_PATH_LEN)
+		{
 
 						memset(pkg_path,0,MAX_PATH_LEN);
 						strcpy(pkg_path,parampath);
-						if(file_exists(pkg_path)) //check if path leads to existing file
-						{
+			if(file_exists(pkg_path)) //check if path leads to existing file
+			{
 						const char * pext=NULL;
 						pext=strchr(parampath,'.');
-						if(pext!=NULL)
-						{
+				if(pext!=NULL)
+				{
 							
-							if (strcmp(pext+1, (const char *)"pkg")==0)//check if file has a .pkg extension or not and treat accordingly
-							{
+					if (strcmp(pext+1, (const char *)"pkg")==0)//check if file has a .pkg extension or not and treat accordingly
+					{
 								/*		if (View_Find("webrender_plugin")) 
 								{
 								//show_msg((char *)"webrender_plugin unloading");
@@ -1413,63 +1462,45 @@ end_download_process:
 								*/		
 								LoadPluginById(0x16,(void *)installPKG_thread);
 								sprintf(msg,"The PKG Install command was sent succesfully.");
-							}
-							else 
-							{
-								sprintf(msg,"This file doesn't have a pkg extension\nPath: %s", parampath);
-							}
-						}
-						else 
-							{
-								sprintf(msg,"This file doesn't have an extension\nPath: %s", parampath);
-							}	
-							
-							
-						}
-						else 
-						{
-							sprintf(msg,"This file doesn't exist\nPath: %s", parampath);
-						}
 					}
 					else 
 					{
-						sprintf(msg,"Pkg path is too long: %d characters\nMaximum accepted length: %d characters", path_length, MAX_PATH_LEN);
+								sprintf(msg,"This file doesn't have a pkg extension\nPath: %s", parampath);
 					}
+				}
+				else 
+				{
+								sprintf(msg,"This file doesn't have an extension\nPath: %s", parampath);
+				}	
+							
+							
+			}
+			else 
+			{
+							sprintf(msg,"This file doesn't exist\nPath: %s", parampath);
+			}
+		}
+		else 
+		{
+						sprintf(msg,"Pkg path is too long: %d characters\nMaximum accepted length: %d characters", path_length, MAX_PATH_LEN);
+		}
 
 #ifdef WM_REQUEST
-					if(wmget==true)
-					{
+		if(wmget==true)
+		{
 						show_msg((char *)msg);
 						sclose(&conn_s);
-					}
-					else
+		}
+		else
 #endif
-					{
+		{
 						http_response(conn_s, header, param, 200, (char*)msg);
-					}
+		}
 					if(sysmem) sys_memory_free(sysmem); //needed??
 					loading_html--;
 					sys_ppu_thread_exit(0);
-			}
-/*			else
-			{
-
-#ifdef WM_REQUEST
-					if(wmget==true)
-					{
-						show_msg((char *)"Web Command Syntax error");
-						sclose(&conn_s);
-					}
-					else
-					{	
-#endif
-						http_response(conn_s, header, param, 200, (char*)"Web Command Syntax error");
-					}
-					if(sysmem) sys_memory_free(sysmem); //needed??
-					loading_html--;
-					sys_ppu_thread_exit(0);
-			}
-*/			
+	}
+	
 #endif
 
 #ifdef PS3_BROWSER
@@ -3039,17 +3070,15 @@ int wwwd_stop(void)
 
 	void downloadPKG_thread(void)
 	{
-		//show_msg((char *)"Entering download call"); 
+		
 		if(download_interface == 0) // test if download_interface is loaded for interface access
 		{
 			download_interface = (download_plugin_interface *)plugin_GetInterface(View_Find("download_plugin"),1);
 		}   
-		//show_msg((char *)"Last stage before download call");  
-
-		download_interface->DoUnk5(0, pkg_durl, pkg_dpath);
-		//FREE(pkg_durl);
-		//free(pkg_dpath);
 		
+		//download_interface->DoUnk5(0, pkg_durl, L"/dev_hdd0");
+		download_interface->DoUnk5(0, pkg_durl, pkg_dpath);
+
 	}
 
 	void installPKG_thread(void)
@@ -3060,7 +3089,7 @@ int wwwd_stop(void)
 		}  
 		game_ext_interface->DoUnk0(NULL); // Load Page
 		game_ext_interface->DoUnk34(pkg_path); // install PKG from path
-		//free(pkg_path);
+		
 	}
 
 #endif
