@@ -1233,8 +1233,8 @@ again3:
 							{
 										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
 										sprintf(msg_dpath,"Storage path: %s", (const char *)INT_HDD_ROOT_PATH);
-										char dbg[MAX_PATH_LEN];
-										sprintf(dbg,"Setting hdd root path.\nConverted wchar= %d",conv_num_dpath);
+										//char dbg[MAX_PATH_LEN];
+										//sprintf(dbg,"Setting hdd root path.\nConverted wchar= %d",conv_num_dpath);
 										//show_msg((char*)dbg);
 							}
 						}	
