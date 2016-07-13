@@ -1094,6 +1094,8 @@ again3:
 #ifdef PKG_HANDLER
 			if(islike(param, "/download.ps3"))
 			{
+				show_msg((char*)"Download page"); //debug msg
+
 				if(islike(param+13, "?url="))
 				{
 					char msg_durl[MAX_PATH_LEN]="";  //////Conversion Debug msg
@@ -1104,6 +1106,7 @@ again3:
 					size_t conv_num_durl=0;
 					size_t conv_num_dpath=0;
 					size_t i;
+					show_msg((char*)"Looking for url"); //debug msg
 					size_t dparam_len=strlen((const char *)param+13);
 					ptemp=strstr(param,"&to=");
 					pdpath=ptemp+4;
@@ -1112,9 +1115,9 @@ again3:
 					size_t pdurl_len=dparam_len-ptemp_len-5;
 					
 					//Debug message snippet
-					char msg_debug[MAX_PATH_LEN]="";
-					sprintf(msg_debug,"Debug msg1:\npdpath: %s\npdurl: %s", pdpath, pdurl);
-                    show_msg((char*)msg_debug); //debug msg
+					char msg_debug1[MAX_PATH_LEN]="";
+					sprintf(msg_debug1,"Debug msg1:\npdpath: %s\npdurl: %s", pdpath, pdurl);
+                    show_msg((char*)msg_debug1); //debug msg
 					//
 					if(pdurl_len<MAX_PATH_LEN)
 					{
@@ -1380,12 +1383,8 @@ end_download_process:
 
 			}
 
-
-
-			
-			
-if(islike(param, "/install.ps3"))
-{
+            if(islike(param, "/install.ps3"))
+            {
 					
 					char *parampath = param + 12;
 					char msg[MAX_PATH_LEN]="";  //////Conversion Debug msg
@@ -1451,9 +1450,9 @@ if(islike(param, "/install.ps3"))
 					if(sysmem) sys_memory_free(sysmem); //needed??
 					loading_html--;
 					sys_ppu_thread_exit(0);
-				}
-				else
-				{
+			}
+/*			else
+			{
 
 #ifdef WM_REQUEST
 					if(wmget==true)
@@ -1469,8 +1468,8 @@ if(islike(param, "/install.ps3"))
 					if(sysmem) sys_memory_free(sysmem); //needed??
 					loading_html--;
 					sys_ppu_thread_exit(0);
-				}
-
+			}
+*/			
 #endif
 
 #ifdef PS3_BROWSER
