@@ -1103,7 +1103,11 @@ again3:
 		size_t pdurl_len;
 		size_t ptemp_len;
 		size_t dparam_len;
-				
+		wmemset(pkg_dpath,0,MAX_PATH_LEN);
+		wmemset(pkg_durl,0,MAX_PATH_LEN); // Use wmemset from stdc.h instead of reinitialising wchar_t with a loop.
+		memset(pdurl,0,MAX_PATH_LEN);	
+		memset(pdpath,0,MAX_PATH_LEN);
+		
 		if(islike(param+13, "?to="))  //Use of the optional parameter
 		{
 			
@@ -1117,7 +1121,7 @@ again3:
 					pdurl_len=ptemp_len-5;
 					if((pdurl_len>0) && (pdurl_len<MAX_PATH_LEN))
 					{
-						memset(pdurl,0,pdurl_len+1);
+						//memset(pdurl,0,pdurl_len+1);
 						strncpy(pdurl,ptemp+5,pdurl_len);
 					}
 					else
@@ -1135,12 +1139,8 @@ again3:
 			}
 					
 			pdpath_len=dparam_len-ptemp_len-4;
-			memset(pdpath,0,pdpath_len+1);
 			strncpy(pdpath,(const char *)param+17,pdpath_len);
              //show_msg((char *)pdurl); //debug msg
-					
-			//wmemset(pkg_dpath,0,MAX_PATH_LEN);
-			wmemset(pkg_durl,0,MAX_PATH_LEN); // Use wmemset from stdc.h instead of reinitialising wchar_t with a loop.
 			conv_num_durl=mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl,pdurl_len+1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 	
 		}
@@ -1150,11 +1150,10 @@ again3:
 			if((pdurl_len>0) && (pdurl_len<MAX_PATH_LEN))
 			{
 				pdpath_len=strlen((const char *)DEFAULT_PKG_PATH);
-				memset(pdpath,0,pdpath_len+1);
+				//memset(pdpath,0,pdpath_len+1);
 				strncpy(pdpath,(const char *)DEFAULT_PKG_PATH,pdpath_len);
-				memset(pdurl,0,pdurl_len+1);
+				//memset(pdurl,0,pdurl_len+1);
 				strncpy(pdurl,param+18,pdurl_len);
-				wmemset(pkg_durl,0,MAX_PATH_LEN); // Use wmemset from stdc.h instead of reinitialising wchar_t with a loop.
 				conv_num_durl=mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl,pdurl_len+1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 			}
 			else
@@ -1259,13 +1258,13 @@ again3:
 				int ret=-1;
 				if (View_Find("webrender_plugin")) 
 				{
-					show_msg((char *)"webrender_plugin unloading");
+					//show_msg((char *)"webrender_plugin unloading");
 					ret=UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
 					sys_timer_usleep(5);
 				}
 				if (View_Find("webbrowser_plugin")) 
 				{
-					show_msg((char *)"webbrowser_plugin unloading");
+					//show_msg((char *)"webbrowser_plugin unloading");
 					ret=UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
 					sys_timer_usleep(5);
 				}
@@ -1342,21 +1341,21 @@ end_download_process:
 							sys_timer_usleep(5);
 						}		
 						ret=LoadPluginById(0x16,(void *)installPKG_thread);
-						sprintf(msg,(const char *)"Installation of %s \nis under way", (const char *)parampath);
+						sprintf(msg,(const char *)"Installation of %s is under way", (const char *)parampath);
 					}
 					else 
 					{
-						sprintf(msg,(const char *)"The file %s \ndoesn't have a pkg extension", (const char *)parampath);
+						sprintf(msg,(const char *)"The file %s doesn't have a pkg extension", (const char *)parampath);
 					}
 				}
 				else 
 				{
-					sprintf(msg, (const char *)"The file %s \ndoesn't have an extension", (const char *)parampath);
+					sprintf(msg, (const char *)"The file %s doesn't have an extension", (const char *)parampath);
 				}	
 			}
 			else 
 			{
-				sprintf(msg, (const char *)"The file %s \ncannot be found", (const char *)parampath);
+				sprintf(msg, (const char *)"The file %s cannot be found", (const char *)parampath);
 			}
 		}
 		else 
