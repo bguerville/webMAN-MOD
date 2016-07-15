@@ -468,20 +468,17 @@ static void waitfor(char *path, uint8_t timeout);
 static void show_msg(char* msg);
 
 #ifdef PKG_HANDLER
-int LoadPluginByName(char * pluginname, void * handler);
 int LoadPluginById(int id, void * handler);
 int UnloadPluginById(int id, void * callback);
 void downloadPKG_thread(void);
 void installPKG_thread(void);
-void closeBrowser(void);
-void closeWebRenderer(void);
 void unloadSysPluginCallback(void);
 
 download_plugin_interface * download_interface;
 webbrowser_plugin_interface * webbrowser_interface;
 webrender_plugin_interface * webrender_interface;
-xmb_plugin_xmm0 * xmm0_interface;
-game_ext_plugin_interface * game_ext_interface;
+//xmb_plugin_xmm0 * xmm0_interface;
+//game_ext_plugin_interface * game_ext_interface;
 char pkg_path[MAX_PATH_LEN];
 wchar_t pkg_dpath[MAX_PATH_LEN];
 wchar_t pkg_durl[MAX_PATH_LEN];
@@ -1101,7 +1098,7 @@ again3:
 		char pdurl[MAX_PATH_LEN]="";
 		size_t conv_num_durl=0;
 		size_t conv_num_dpath=0;
-		size_t i;
+		//size_t i;
 		size_t pdpath_len;
 		size_t pdurl_len;
 		size_t ptemp_len;
@@ -1259,16 +1256,17 @@ again3:
 					
 			if(conv_num_dpath>0)
 			{
+				int ret=-1;
 				if (View_Find("webrender_plugin")) 
 				{
 					show_msg((char *)"webrender_plugin unloading");
-					UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
+					ret=UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
 					sys_timer_usleep(5);
 				}
 				if (View_Find("webbrowser_plugin")) 
 				{
 					show_msg((char *)"webbrowser_plugin unloading");
-					UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
+					ret=UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
 					sys_timer_usleep(5);
 				}
 				/*	if (View_Find("download_plugin")) 
@@ -1281,7 +1279,7 @@ again3:
 					//sprintf(msg_dpath,"Downloaded file stored at %ls", pkg_dpath);
 					//sprintf(msg_durl,"Success. Attempting to download URL: %ls", pkg_durl);
 				sprintf(msg_durl, (const char *)"Success. Attempting to download URL: %s\n", (const char *)pdurl);
-				LoadPluginById(0x29,(void *)downloadPKG_thread);
+				ret=LoadPluginById(0x29,(void *)downloadPKG_thread);
 				goto end_download_process;
 			}
 			else
@@ -1306,6 +1304,7 @@ end_download_process:
 			http_response(conn_s, header, param, 200, (char*)strcat(msg_durl,msg_dpath));
 
 		}
+		show_msg((char*)strcat(msg_durl,msg_dpath));
 		//show_msg((char*)msg_durl); //debug msg
 		//show_msg((char*)msg_dpath); //debug msg
 		if(sysmem) sys_memory_free(sysmem); //needed??
@@ -1318,6 +1317,7 @@ end_download_process:
 		char *parampath = param + 12;
 		char msg[MAX_PATH_LEN]="";  //////Conversion Debug msg
 		size_t path_length=strlen(parampath);
+		int ret=-1;
 		if (path_length<MAX_PATH_LEN)
 		{
 			memset(pkg_path,0,MAX_PATH_LEN);
@@ -1329,391 +1329,55 @@ end_download_process:
 				{
 					if (strcmp(pext+1, (const char *)"pkg")==0)//check if file has a .pkg extension or not and treat accordingly
 					{
-						/*		if (View_Find("webrender_plugin")) 
+						if (View_Find("webrender_plugin")) 
 						{
-						//show_msg((char *)"webrender_plugin unloading");
-						UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
-						sys_timer_sleep(3);
+							//show_msg((char *)"webrender_plugin unloading");
+							ret=UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
+							sys_timer_usleep(5);
 						}
-						*/		
-						LoadPluginById(0x16,(void *)installPKG_thread);
-						sprintf(msg,(const char *)"The PKG Install command was sent successfully.");
+						if (View_Find("webbrowser_plugin")) 
+						{
+							//show_msg((char *)"webbrowser_plugin unloading");
+							ret=UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
+							sys_timer_usleep(5);
+						}		
+						ret=LoadPluginById(0x16,(void *)installPKG_thread);
+						sprintf(msg,(const char *)"Installation of %s \nis under way", (const char *)parampath);
 					}
 					else 
 					{
-						sprintf(msg,(const char *)"The file %s\ndoesn't have a pkg extension", (const char *)parampath);
+						sprintf(msg,(const char *)"The file %s \ndoesn't have a pkg extension", (const char *)parampath);
 					}
 				}
 				else 
 				{
-					sprintf(msg, (const char *)"The file %s\ndoesn't have an extension", (const char *)parampath);
+					sprintf(msg, (const char *)"The file %s \ndoesn't have an extension", (const char *)parampath);
 				}	
 			}
 			else 
 			{
-				sprintf(msg, (const char *)"The file %s\ndoesn't cannot be found", (const char *)parampath);
+				sprintf(msg, (const char *)"The file %s \ncannot be found", (const char *)parampath);
 			}
 		}
 		else 
 		{
-			sprintf(msg, (const char *)"Pkg path is too long: %d characters\nMaximum accepted length: %d characters", (const char *)path_length, (const char *)MAX_PATH_LEN);
+			sprintf(msg, (const char *)"Pkg path is too long: %d characters\nMaximum accepted length: %d characters", (int)path_length, (int)MAX_PATH_LEN);
 		}
 
 #ifdef WM_REQUEST
-		if(wmget==true)
-		{
-			show_msg((char *)msg);
-			sclose(&conn_s);
-		}
+		if(wmget==true) sclose(&conn_s);
 		else
 #endif
 		{
 			http_response(conn_s, header, param, 200, (char *)msg);
 		}
+		show_msg((char *)msg);
 		if(sysmem) sys_memory_free(sysmem); //needed??
 		loading_html--;
 		sys_ppu_thread_exit(0);
 	}
 	
 #endif
-/*	
-		if(islike(param+13, "?url="))
-		{
-					char msg_durl[MAX_PATH_LEN]="";  //////Conversion Debug msg
-					char msg_dpath[MAX_PATH_LEN]="";  //////Conversion Debug msg
-					char pdpath[MAX_PATH_LEN]="";
-					char pdurl[MAX_PATH_LEN]="";
-					size_t conv_num_durl=0;
-					size_t conv_num_dpath=0;
-					size_t i;
-					size_t pdpath_len;
-					size_t pdurl_len;
-					size_t ptemp_len;
-					size_t dparam_len;
-					
-					dparam_len=strlen((const char *)param+13);
-					char *ptemp=strstr(param,(const char *)"&to=");
-					//show_msg((char*)ptemp); //debug msg
-		
-			if(ptemp!=NULL)
-			{
-					//show_msg((char*)"ptemp is not null"); //debug msg
-					ptemp_len=strlen((const char *)ptemp);
-					pdpath_len=ptemp_len-4;
-					memset(pdpath,0,pdpath_len+1);
-					strncpy(pdpath,ptemp+4,pdpath_len);
-
-			}
-			else
-			{
-						//show_msg((char*)"No path given"); //debug msg
-					ptemp_len=0;
-					pdpath_len=strlen((const char *)DEFAULT_PKG_PATH);
-					memset(pdpath,0,pdpath_len+1);
-					strncpy(pdpath,(const char *)DEFAULT_PKG_PATH,pdpath_len);
-							
-					//char msg_debug2[MAX_PATH_LEN]="";
-					//sprintf(msg_debug2,(char *)"Debug msg2:\nPath characters copied: %d", pdpath_len);
-					//show_msg((char*)msg_debug2); //debug msg
-				
-			}
-					
-					pdurl_len=dparam_len-ptemp_len-5;
-					
-			if((pdurl_len>0) && (pdurl_len<MAX_PATH_LEN))
-			{
-
-						memset(pdurl,0,pdurl_len+1);
-						strncpy(pdurl,(const char *)param+18,pdurl_len);
-                        //show_msg((char *)pdurl); //debug msg
-					
-						wmemset(pkg_dpath,0,MAX_PATH_LEN);
-						wmemset(pkg_durl,0,MAX_PATH_LEN); // Use wmemset from stdc.h instead of reinitialising wchar_t with a loop.
-						conv_num_durl=mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl,pdurl_len+1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
-						
-						//char msg_debug2[MAX_PATH_LEN]="";
-					   // sprintf(msg_debug2,(char *)"Debug msg2:\nURL characters converted: %d\npdurl strlen= %d", conv_num_durl,strlen(pdurl));
-						//show_msg((char*)msg_debug2); //debug msg
-					
-			if(conv_num_durl>0)  
-			{
-							//To do: check if url is valid before launching download
-							//show_msg((char*)"Checking storage path"); //debug msg
-					if((pdpath_len>0) && (pdpath_len<MAX_PATH_LEN) && isDir((const char *)pdpath))
-					{
-								//set given path
-								conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)pdpath,pdpath_len+1);
-								sprintf(msg_dpath,"Storage path: %s", pdpath);
-								//show_msg((char*)"Setting path as given"); //debug msg
-					}
-					else if((pdpath_len>0) && (pdpath_len<MAX_PATH_LEN))
-					{
-								//Try to create the folder in proposed path
-								//if success set given path if failure set default path
-						if(cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
-						{
-									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath,(const char *)pdpath,pdpath_len+1);
-									sprintf(msg_dpath,"Storage path: %s", pdpath);
-									//show_msg((char*)"Make directory with given path"); //debug msg
-						}
-						else
-						{
-									
-							if(isDir((const char *)DEFAULT_PKG_PATH))
-							{
-									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-									sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
-									//show_msg((char*)"Setting default pkg path");
-							}
-							else
-							{
-									//create default dir
-									//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
-
-								if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
-								{
-										
-										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-										sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
-										//show_msg((char*)"Creating & setting default pkg path");
-								}
-								else
-								{
-										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
-										sprintf(msg_dpath,"Storage path: %s", (const char *)INT_HDD_ROOT_PATH);
-									//	char dbg[MAX_PATH_LEN];
-										//sprintf(dbg,"Setting hdd root path.\nConverted wchar= %d",conv_num_dpath);
-										//show_msg((char*)dbg);
-									
-								}
-							}
-						}
-								
-								//show_msg((char *)msg_dpath);
-					}
-					else
-					{
-									//show_msg((char*)"Setting storage path as none was given"); //debug msg
-						if(isDir((const char *)DEFAULT_PKG_PATH))
-						{
-									conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-									sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
-									//show_msg((char*)"Setting default pkg path");
-						}
-						else
-						{
-									//create default dir
-									//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
-
-							if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
-							{
-										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-										sprintf(msg_dpath,"Storage path: %s", (const char *)DEFAULT_PKG_PATH);
-										//show_msg((char*)"Creating & setting default pkg path");
-							}
-							else
-							{
-										conv_num_dpath=mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
-										sprintf(msg_dpath,"Storage path: %s", (const char *)INT_HDD_ROOT_PATH);
-										//char dbg[MAX_PATH_LEN];
-										//sprintf(dbg,"Setting hdd root path.\nConverted wchar= %d",conv_num_dpath);
-										//show_msg((char*)dbg);
-							}
-						}	
-								//show_msg((char *)msg_dpath);
-					}
-							
-								//show_msg((char *)msg_dpath);
-							
-					if(conv_num_dpath>0)
-					{
-								/*
-									sprintf(msg_dpath,"File will be downloaded in %ls\n", pkg_dpath);
-									sprintf(msg_durl,"Attempting to download URL: %ls\n", pkg_durl);
-									
-									CellHttpClientId client = 0;
-									CellHttpTransId trans = 0;
-									CellHttpUri uri;
-									//uri = (CellHttpUri) {.scheme="http",.hostname="www.dropbox.com",.username="",.password="",.path="",.port=80,.reserved=NULL};
-									
-									uri.scheme="http";
-									uri.hostname="www.dropbox.com";
-									uri.username="";
-									uri.password="";
-									uri.path="/urlpath";
-									uri.port=80;
-									
-									int code = 0;
-									int ret;
-									ret = cellHttpCreateClient(&client);
-									//ret = cellHttpUtilParseUri(&uri, (const char *)pkg_durl, uriPool, poolSize, NULL);
-									ret = cellHttpCreateTransaction(&trans, client, CELL_HTTP_METHOD_GET, &uri);
-									ret = cellHttpSendRequest(trans, NULL, 0, NULL);
-									ret = cellHttpResponseGetStatusCode(trans, &code);
-									sprintf(msg_durl,"URL is invalid.\nReturn value: %d\n Error code: %d\n",ret,code);
-									show_msg(msg_durl);
-									goto end_download_process;
-									
-				
-								//test if url is valid???
-
-								#define REQUEST_URI  "http://www.scei.co.jp/"
-								#define BUFFER_SIZE  256
-								#define HTTP_POOL_SIZE      (8 * 1024)
-								#define MALLOC(size) malloc(size)
-								#define FREE(ptr)    free(ptr); ptr = NULL;
-
-								static char buffer[BUFFER_SIZE];
-							
-									
-								CellHttpClientId client = 0;
-								CellHttpTransId trans = 0;
-								CellHttpUri uri;
-								int ret;
-								bool has_cl = true;
-								uint64_t length = 0;
-								uint64_t recvd;
-								size_t poolSize = 0;
-								void *uriPool;
-								void *httpPool;
-								const char *serverName;
-								size_t localRecv = 0;
-			
-								memset(buffer, 0x00, sizeof(buffer));
-
-								serverName = REQUEST_URI;
-
-								httpPool = malloc(HTTP_POOL_SIZE);
-								if (httpPool == NULL) 
-								{
-								//printf("failed to malloc libhttp memory pool\n");
-								ret = -1;
-								goto end_download_process;
-								}
-										
-								ret = cellHttpInit(httpPool, HTTP_POOL_SIZE);
-								if (0 > ret) 
-								{
-								//printf("unable to start libhttp... (0x%x)\n", ret);
-								return -1;
-								}
-							
-								
-								ret = cellHttpCreateClient(&client);
-								if (0 > ret) 
-								{
-								//printf("unable to create http client... (0x%x)\n", ret);
-								ret = -1;
-								goto end_download_process;
-							
-								int code = 0;
-								
-			
-								ret = cellHttpUtilParseUri(NULL, serverName, NULL, 0, &poolSize);
-								if (0 > ret) 
-								{
-								//printf("error parsing URI... (0x%x)\n\n", ret);
-								ret = -1;
-								goto end_download_process;
-								}
-								if (NULL == (uriPool = MALLOC(poolSize))) {
-								//printf("error mallocing uriPool (%d)\n", poolSize);
-								goto end_download_process;
-								}
-								ret = cellHttpUtilParseUri(&uri, serverName, uriPool, poolSize, NULL);
-								if (0 > ret) 
-								{
-								FREE(uriPool);
-								//printf("error parsing URI... (0x%x)\n\n", ret);
-								ret = -1;
-								goto end_download_process;
-								}
-								ret = cellHttpCreateTransaction(&trans, client, CELL_HTTP_METHOD_GET, &uri);
-								FREE(uriPool);
-								if (0 > ret)
-								{
-								//printf("failed to create http transaction... (0x%x)\n\n", ret);
-								ret = -1;
-								goto end_download_process;
-								}
-								ret = cellHttpResponseGetStatusCode(trans, &code);
-								if (0 > ret) 
-								{
-								printf("failed to receive http response... (0x%x)\n\n", ret);
-								ret = -1;
-								goto end_download_process;
-								}
-								//printf("Status Code is %d\n", code);
-						
-								
-								//test if url is valid end								
-				
-				
-									
-						if (View_Find("webrender_plugin")) 
-						{
-									show_msg((char *)"webrender_plugin unloading");
-									UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
-									sys_timer_sleep(3);
-						}
-									if (View_Find("download_plugin")) 
-								{
-								show_msg((char *)"download_plugin unloading");
-								UnloadPluginById(0x29,(void *)unloadSysPluginCallback);
-								sys_timer_sleep(3);
-								}
-								
-								//sprintf(msg_dpath,"Downloaded file stored at %ls", pkg_dpath);
-								//sprintf(msg_durl,"Success. Attempting to download URL: %ls", pkg_durl);
-								sprintf(msg_durl,"Success. Attempting to download URL: %s\n", pdurl);
-								LoadPluginById(0x29,(void *)downloadPKG_thread);
-								
-								goto end_download_process;
-					}
-					else
-					{
-									sprintf(msg_dpath,"Attempt to set storage location failed");
-									sprintf(msg_durl,"Attempt to download URL: %s cancelled\n", pdurl);
-									goto end_download_process;
-					}
-				}
-					else
-				{
-							sprintf(msg_dpath,"File download to %s is cancelled", pdpath);
-							sprintf(msg_durl,"Invalid URL: %s\n", pdurl);
-							goto end_download_process;
-				}
-			}
-			else
-			{
-						sprintf(msg_dpath,"File download to %s is cancelled", pdpath);
-						sprintf(msg_durl,"Invalid URL: %s\n", pdurl);
-						goto end_download_process;
-			}				
-
-					
-end_download_process:
-#ifdef WM_REQUEST
-				if(wmget==true) sclose(&conn_s);
-				else
-#endif						
-				{	
-						http_response(conn_s, header, param, 200, (char*)strcat(msg_durl,msg_dpath));
-
-				}
-
-					show_msg((char*)msg_durl); //debug msg
-					show_msg((char*)msg_dpath); //debug msg
-
-					if(sysmem) sys_memory_free(sysmem); //needed??
-					loading_html--;
-					sys_ppu_thread_exit(0);
-
-		}
-
-	}
-*/
-    
 
 #ifdef PS3_BROWSER
 			if(islike(param, "/browser.ps3"))
@@ -3217,14 +2881,6 @@ int wwwd_stop(void)
 		return SYS_PRX_STOP_OK;
 	}
 #ifdef PKG_HANDLER
-	int LoadPluginByName(char *pluginname, void *handler)
-	{
-		if(xmm0_interface == 0) // getting xmb_plugin xmm0 interface for loading plugin sprx
-		{
-			xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"),'XMM0');
-		}
-		return xmm0_interface->LoadPlugin3(xmm0_interface->GetPluginIdByName(pluginname), handler,0);
-	}
 	int LoadPluginById(int id, void *handler)
 	{
 		//show_msg((char *)"Getting xmb interface"); 
@@ -3245,35 +2901,6 @@ int wwwd_stop(void)
 		return xmm0_interface->Shutdown(id, handler,1);
 	}
 
-
-	void closeBrowser(void)
-	{
-		show_msg((char *)"Entering browser call"); 
-		if(webbrowser_interface == 0) // test if browser_interface is loaded for interface access
-		{
-			webbrowser_interface = (webbrowser_plugin_interface *)plugin_GetInterface(View_Find("webbrowser_plugin"),1);
-		}   
-		//show_msg((char *)"Last stage before browser call");  
-
-		webbrowser_interface->Shutdown();
-		//UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
-		show_msg((char *)"Browser shutdown call launched");  
-
-	}
-	void closeWebRenderer(void)
-	{
-		//show_msg((char *)"Entering webrenderer shutdown call"); 
-		if(webrender_interface == 0) // test if webrenderer is loaded for interface access
-		{
-			webrender_interface = (webrender_plugin_interface *)plugin_GetInterface(View_Find("webrender_plugin"),1);
-		}   
-		//show_msg((char *)"Last stage before browser call");  
-
-		webrender_interface->DoUnk3();
-		//UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
-		//show_msg((char *)"WebRenderer shutdown call launched");  
-
-	}
 	void unloadSysPluginCallback(void)
 	{
 		//Add potential callback process
