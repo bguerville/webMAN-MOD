@@ -54,7 +54,6 @@ static void downloadPKG_thread(void)
 	{
 		download_interface = (download_plugin_interface *)plugin_GetInterface(View_Find("download_plugin"),1);
 	}
-
 	download_interface->DoUnk5(0, pkg_durl, pkg_dpath);
 }
 
@@ -222,7 +221,6 @@ static void download_file(char *param, bool wmget, char *msg)
 			}
 
 			sprintf(msg_durl, (const char *)"Downloading: %s\n", (const char *)pdurl);
-
 			ret = LoadPluginById(0x29, (void *)downloadPKG_thread);
 		}
 		else
