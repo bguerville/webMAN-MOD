@@ -1,5 +1,11 @@
 # webMAN MOD - Fork of original webMAN plugin by Deank for Playstation 3
 
+Warning:
+This repo contains a development version of webMAN-MOD that I used for my own purposes.
+At times the repo may rejoin the official release but some commits will not be working properly!!
+
+
+
 __README IS STILL IN PROGRESS, IF YOU SEE ANY ERROR PLEASE TELL ME OR PUSH A COMMIT__
 
 webMAN MOD is an homebrew plugin with many features added on the original webMAN by Deank.
