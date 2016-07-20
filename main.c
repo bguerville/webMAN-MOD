@@ -1055,10 +1055,11 @@ again3:
 			{
 				char msg[MAX_PATH_LEN + MAX_PATH_LEN]  = "";
 
-				download_file(header, msg);
+				download_file(param, wmget, msg);
 
 				#ifdef WM_REQUEST
-				if(!wmget)
+				if(wmget) sclose(&conn_s);
+				else
 				#endif
 				{
 					http_response(conn_s, header, param, 200, msg);
@@ -1077,7 +1078,8 @@ again3:
 				installPKG(param + 12, msg);
 
 				#ifdef WM_REQUEST
-				if(!wmget)
+				if(wmget) sclose(&conn_s);
+				else
 				#endif
 				{
 					http_response(conn_s, header, param, 200, msg);
