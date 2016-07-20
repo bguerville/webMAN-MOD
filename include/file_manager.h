@@ -72,26 +72,24 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 			sprintf(fsize, "<a href=\"/mount.ps3%s\" title=\"%'llu %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, sz, sf);
 	}
 #endif
+
 #ifdef PKG_HANDLER
-else if( !strcmp(ext, ".pkg") || !strcmp(ext, ".PKG") ) sprintf(fsize, "<a href=\"/install.ps3%s\">%'llu %s</a>", templn, sz, sf);
+	else if( !strcmp(ext, ".pkg") || !strcmp(ext, ".PKG") )
+			sprintf(fsize, "<a href=\"/install.ps3%s\">%'llu %s</a>", templn, sz, sf);
 #endif
 
 #ifdef COPY_PS3
-	else if(   !strcmp(ext, ".p3t") || !extcmp(name, ".edat", 5)
+	else if(   !strcmp(ext, ".pkg") || !strcmp(ext, ".p3t") || !extcmp(name, ".edat", 5)
 			|| !strcmp(ext, ".rco") || !strcmp(ext, ".qrc") || !memcmp(name, "coldboot", 8)
 			|| !memcmp(name, "webftp_server", 13) || !memcmp(name, "boot_plugins_", 13)
 			|| show_img
 			|| !strcasecmp(ext, ".mp4") || !strcasecmp(ext, ".mkv") || !strcasecmp(ext, ".avi")
 			|| !strcasecmp(ext, ".mp3")
-	#ifndef PKG_HANDLER
-			|| !strcmp(ext, ".pkg")
-	#endif
-
-	#ifdef SWAP_KERNEL
+ #ifdef SWAP_KERNEL
 			|| !memcmp(name, "lv2_kernel", 10)
-	#endif
+ #endif
 			)
-    		sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
+			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
 #endif //#ifdef COPY_PS3
 
 
