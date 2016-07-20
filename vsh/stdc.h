@@ -80,10 +80,10 @@ extern int stdc_2677568C(int c);                                                
 
 extern int stdc_26F023D5(FILE *stream);                                               // ftell()
 #define ftell stdc_26F023D5
-
+*/
 extern int stdc_273B9711(char *str, const char *fmt, ...);                            // sprintf()
 #define sprintf stdc_273B9711
-
+/*
 extern struct dirent *stdc_2B81FB7F(DIR *dirp);                                       // readdir()
 #define readdir stdc_2B81FB7F
 
@@ -152,10 +152,10 @@ extern double stdc_475D855B(double x);                                          
 
 extern int stdc_4B6A4010(wchar_t * ws, size_t len, const wchar_t * fmt, va_list arg); // vswprintf()
 #define vswprintf stdc_4B6A4010
-
+*/
 extern int stdc_4D348427(const char *str, FILE *stream);                              // fputs()
 #define fputs stdc_4D348427
-
+/*
 extern float stdc_4DDB926B(float x, float y);                                         // powf()
 #define powf stdc_4DDB926B
 
@@ -173,10 +173,10 @@ extern size_t stdc_526A496A(int fildes, const void *buf, size_t nbytes);        
 
 extern void stdc_54F57626(FILE *stream);                                              // rewind()
 #define rewind stdc_54F57626
-
+*/
 extern wchar_t *stdc_55D4866E(wchar_t *ws, int n, FILE *stream);                      // fgetws()
 #define fgetws stdc_55D4866E
-
+/*
 extern char *stdc_589B5314(char *dest, const char *src, size_t n);                    // strncat()
 #define strncat stdc_589B5314
 
@@ -205,13 +205,13 @@ extern size_t stdc_65E8D4D0(const wchar_t *ws);                                 
 
 extern void stdc_692B497F(const char *str);                                           // perror()
 #define perror stdc_692B497F
-
+*/
 extern FILE *stdc_69C27C12(const char *filename, const char *mode);                   // fopen()
 #define fopen stdc_69C27C12
 
 extern int stdc_69FF1B9B(FILE *stream, long int offset, int whence);                  // fseek()
 #define fseek stdc_69FF1B9B
-
+/*
 extern int stdc_6D5115B0(const wchar_t *ws1, const wchar_t *ws2, size_t n);           // wcsncmp()
 #define wcsncmp stdc_6D5115B0
 
@@ -468,10 +468,10 @@ extern char *stdc_DEBEE2AF(char *str, int c);                                   
 
 extern float stdc_DECE76A6(float x);                                                  // acosf()
 #define acosf stdc_DECE76A6
-
+*/
 extern int stdc_E1BD3587(FILE *stream);                                               // fclose()
 #define fclose stdc_E1BD3587
-
+/*
 extern int stdc_E1E83C65(const char *str1, const char *str2, size_t num);             // strncmp()
 #define strncmp stdc_E1E83C65
 
@@ -525,10 +525,10 @@ extern size_t stdc_F3EF3678(const wchar_t *wcs1, const wchar_t *wcs2);          
 
 extern wchar_t *stdc_F41355F9(wchar_t *dest, const wchar_t *src);                     // wcscpy()
 #define wcscpy stdc_F41355F9
-
+*/
 extern size_t stdc_F88F26C4(const void *ptr, size_t size, size_t count, FILE *stream);  // fwrite()
 #define fwrite stdc_F88F26C4
-
+/*
 extern char *stdc_F89DC648(const char *str1, const char *str2);                       // strpbrk()
 #define strpbrk stdc_F89DC648
 
