@@ -25,6 +25,7 @@
 #define UMNT_GAME (1<<7)
 #define VIDRECORD (1<<8)
 #define PLAY_DISC (1<<9)
+#define INSTALPKG (1<<10)
 
 #define REBUGMODE (1<<13)
 #define NORMAMODE (1<<14)
@@ -113,6 +114,10 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "pr2=1")) webman_config->combo2|=DEBUGMENU;
 
 	if(!strstr(param, "p2c=1")) webman_config->combo2|=PS2TOGGLE;
+#endif
+
+#ifdef PKG_HANDLER
+	if(!strstr(param, "pkg=1")) webman_config->combo2|=INSTALPKG;
 #endif
 	if(!strstr(param, "p2s=1")) webman_config->combo2|=PS2SWITCH;
 	if(!strstr(param, "pgd=1")) webman_config->combo2|=EXTGAMDAT;
@@ -737,6 +742,9 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	add_check_box("p2s", "1", "PS2 SWITCH",   " : <b>SELECT+L2+R2</b><br>"     , !(webman_config->combo2 & PS2SWITCH), buffer);
+#ifdef PKG_HANDLER
+	add_check_box("pkg", "1", "INSTALL PKG",  " : <b>SELECT+R2+O</b><br>"      , !(webman_config->combo2 & INSTALPKG), buffer);
+#endif
 	add_check_box("pld", "1", "PLAY DISC",    " : <b>L2+START</b><br>"
 							  "</td></tr></table>"                             , !(webman_config->combo2 & PLAY_DISC), buffer);
 
@@ -791,20 +799,11 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(templn, "OFFSET#1: %x, P: %i, W: %i, H: %i, E: %x <br>",
 		gcm_obj1[0], gcm_obj1[1], gcm_obj1[2], gcm_obj1[3], buf_adr[1]); strcat(buffer, templn);
 */
-
 }
 
 static int save_settings()
 {
-	u64 written; int fdwm=0;
-	if(cellFsOpen(WMCONFIG, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		cellFsWrite(fdwm, (void *)wmconfig, sizeof(WebmanCfg), &written);
-		cellFsClose(fdwm);
-		return CELL_FS_SUCCEEDED;
-	}
-	else
-		return FAILED;
+	savefile(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
 }
 
 static void reset_settings()

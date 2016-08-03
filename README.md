@@ -1,11 +1,5 @@
 # webMAN MOD - Fork of original webMAN plugin by Deank for Playstation 3
 
-Warning:
-This repo contains a development version of webMAN-MOD that I used for my own purposes.
-At times the repo may rejoin the official release but some commits will not be working properly!!
-
-
-
 __README IS STILL IN PROGRESS, IF YOU SEE ANY ERROR PLEASE TELL ME OR PUSH A COMMIT__
 
 webMAN MOD is an homebrew plugin with many features added on the original webMAN by Deank.
@@ -73,6 +67,8 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Support for change BD/DVD region
 - NETISO server on PS3 (ISO only)
 - Support for local web chat
+- Support for edit small text files
+- Download files & install PKG remotely or with shortcut
 
 ## How to build
 Requirements for Windows:
@@ -93,6 +89,7 @@ Requirements for GNU/Linux:
 - Zar my mate since the first day
 - NzV for Ps3mapi, Mamba prxloader
 - OsirisX for PS3XPAD
+- bguerville for web downloader & package installer module
 - Mysis, who wrote some useful libs and reverse engineering VSH Exports functions: http://www.ps3devwiki.com/ps3/VSH#Exports
 - 3141card for VSH Menu POC & Littlebalup for his enhancement/new features
 - PSX-SCENE, PSX-PLACE, PLAYSTATIONHAX, PS3HAX & other scene websites/users, who translated, helped in the testing process

@@ -8,7 +8,7 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http)
 {
-	unsigned long long sbytes = sz;
+	unsigned long long sbytes = sz; bool is_root = false;
 
 	if(sz < 10240)			{sprintf(sf, "%s", STR_BYTE);} else
 	if(sz < 0x200000ULL)	{sprintf(sf, "%s", STR_KILOBYTE); sz >>= 10;} else
@@ -39,7 +39,7 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		else if(show_play && isDir("/dev_bdvd/AVCHD"))
 			sprintf(fsize, HTML_URL, "/play.ps3", "&lt;AVCHD>");
 #ifdef FIX_GAME
-		else if(flen == 9 && islike(templn, HDD0_GAME_DIR))
+		else if(islike(templn, HDD0_GAME_DIR) || (strstr(templn + 10, "/PS3_GAME" ) != NULL))
 			sprintf(fsize, "<a href=\"/fixgame.ps3%s\">%s</a>", templn, HTML_DIR);
 #endif
 #ifdef COPY_PS3
@@ -49,10 +49,12 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		else
 		if(strlen(templn) <= 11 && islike(templn, "/dev_"))
 		{
-			uint64_t freeSize, devSize;
-			system_call_3(SC_FS_DISK_FREE, (uint64_t)templn, (uint64_t)&devSize, (uint64_t)&freeSize);
+			uint64_t freeSize = 0, devSize = 0; is_root = true;
+			system_call_3(SC_FS_DISK_FREE, (uint64_t)(uint32_t)templn, (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);
 
-			sprintf(fsize, "<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s)\">%'8llu %s</a>", templn, (unsigned long long)((devSize)>>20), STR_MEGABYTE, devSize, STR_BYTE, (unsigned long long)((freeSize)>>20), STR_MEGABYTE);
+			sprintf(fsize,  "<div style='height:18px;background:#121;text-align:left;'><div style='height:18px;background:#444;width:%i%%'></div><div style='position:relative;top:-18px;text-align:right'>"
+							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
+							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), templn, (unsigned long long)((freeSize)>>20), STR_MBFREE, freeSize, STR_BYTE, (unsigned long long)((devSize)>>20), STR_MEGABYTE, devSize, STR_BYTE, (unsigned long long)((freeSize)>>20), STR_MEGABYTE);
 		}
 		else
 #ifdef PS2_DISC
@@ -90,13 +92,16 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
  #endif
 			)
 			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
+	else if( !extcmp(name, ".bak", 4) )
+			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 #endif //#ifdef COPY_PS3
-
 
 #ifdef LOAD_PRX
 	else if(!is_net && ( !extcmp(name, ".sprx", 5)))
 		sprintf(fsize, "<a href=\"/loadprx.ps3?slot=6&prx=%s\">%'llu %s</a>", templn, sz, sf);
 #endif
+	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.his|.hip|.bup|.css|.html|.conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
+			sprintf(fsize, "<a href=\"/edit.ps3%s\">%'llu %s</a>", templn, sz, sf);
 	else
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
@@ -129,9 +134,9 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		}
 	}
 
-	sprintf(templn, "<td> %s &nbsp; </td>"
+	sprintf(templn, "<td> %s%s</td>"
 					"<td>%02i-%s-%04i %02i:%02i</td></tr>",
-					fsize,
+					fsize, is_root ? "" : " &nbsp; ",
 					rDate.day, smonth[rDate.month-1], rDate.year, rDate.hour, rDate.minute);
 	strcat(tempstr, templn);
 
@@ -242,8 +247,14 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
 			sprintf(templn, "<img id=\"icon\"%s>"
 							"<script>"
-							"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}"
-							"</script>", ICON_STYLE, jb_games ? "/PS3_GAME" : ""); strcat(buffer, templn);
+							"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}%s"
+							"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : ""),
+
+							// F2 = rename/move file pointed with mouse
+							islike(param, "/dev_") ?
+							"document.addEventListener('keyup',ku,false);"
+							"function ku(e){e=e||window.event;if(e.keyCode == 113)"
+							"{var a=document.querySelectorAll('a:hover')[0].href,f=a.substring(a.indexOf('/',8));if(f.substring(0,5)=='/dev_'){t=prompt('Rename to:',f);if(t&&t!=a)window.location='/rename.ps3'+f+'|'+t;}}}" : ""); strcat(buffer, templn);
 		}
 
 		strcat(buffer, "<table class=\"propfont\"><tr><td>");
@@ -459,7 +470,6 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			if(tlen > BUFFER_SIZE_HTML) break;
 		}
 
-		//if(sysmem_html) sys_memory_free(sysmem_html);
 		strcat(buffer + tlen, "</table>");
 
 		if(strlen(param) > 4)

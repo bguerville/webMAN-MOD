@@ -172,7 +172,7 @@ static char STR_HOME[8] = "Home";
 #define STR_FANCH3		"MIN FAN SPEED: "
 
 #define STR_OVERHEAT	"System overheat warning!"
-#define STR_OVERHEAT2	"  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!"
+#define STR_OVERHEAT2	"  OVERHEAT DANGER!\nFAN SPEED INCREASED!"
 
 #define STR_NOTFOUND	"Not found!"
 
@@ -338,7 +338,7 @@ static char STR_FANCH2[50]			= "FAN SPEED: ";
 static char STR_FANCH3[50]			= "MIN FAN SPEED: ";
 
 static char STR_OVERHEAT[100]		= "System overheat warning!";
-static char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!";
+static char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
 
 static char STR_NOTFOUND[50]		= "Not found!";
 
@@ -642,14 +642,7 @@ static void update_language(void)
 		language("STR_FANCTRL5", STR_FANCTRL5);
 		language("STR_UPDN", STR_UPDN);
 		language("STR_LFRG", STR_LFRG);
-#ifdef COBRA_ONLY
-		language("STR_DISCOBRA", STR_DISCOBRA);
-#endif
-#ifdef REX_ONLY
-		language("STR_RBGMODE", STR_RBGMODE);
-		language("STR_RBGNORM", STR_RBGNORM);
-		language("STR_RBGMENU", STR_RBGMENU);
-#endif
+
 		language("STR_SAVE", STR_SAVE);
 		language("STR_SETTINGSUPD", STR_SETTINGSUPD);
 		language("STR_ERROR", STR_ERROR);
@@ -664,7 +657,7 @@ static void update_language(void)
 		language("STR_EJECTDISC", STR_EJECTDISC);
 		language("STR_UNMOUNTGAME", STR_UNMOUNTGAME);
 
-        language("STR_WMSTART", STR_WMSTART);
+		language("STR_WMSTART", STR_WMSTART);
 		language("STR_WMUNL", STR_WMUNL);
 		language("STR_CFWSYSALRD", STR_CFWSYSALRD);
 		language("STR_CFWSYSRIP", STR_CFWSYSRIP);
@@ -723,6 +716,15 @@ static void update_language(void)
 		language("COVERS_PATH", COVERS_PATH);
 		language("IP_ADDRESS", local_ip);
 		language("SEARCH_URL", search_url);
+
+#ifdef COBRA_ONLY
+		language("STR_DISCOBRA", STR_DISCOBRA);
+#endif
+#ifdef REX_ONLY
+		language("STR_RBGMODE", STR_RBGMODE);
+		language("STR_RBGNORM", STR_RBGNORM);
+		language("STR_RBGMENU", STR_RBGMENU);
+#endif
 	}
 
 	if(fh) {cellFsClose(fh); lang_pos=fh=0;}

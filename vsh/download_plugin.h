@@ -4,7 +4,7 @@
 typedef struct download_plugin_interface_t
 {
 	int32_t (*DoUnk0)(int);                                                         // 1 Parameter: int (0-4) - "page_select_destination"
-	int32_t (*DoUnk1)(wchar_t *);           	                                    // 1 Parameter: wchar_t * url
+	int32_t (*DoUnk1)(wchar_t * url);                                               // 1 Parameter: wchar_t * url
 	int32_t (*DoUnk2)(wchar_t *);                                                   // 1 Parameter: wchar_t * device_path?
 	int32_t (*DoUnk3)(int, wchar_t *);                                              // 2 Parameter: int (0-4), wchar_t * url - first value == 5 => does PSN Login / "page_select_dst"
 	int32_t (*DoUnk4)(void);                                                     	// 7 Parameter: , wchar_t * url,
