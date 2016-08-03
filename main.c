@@ -1234,7 +1234,7 @@ again3:
 				if(npklic_struct_offset == 0)
 				{
 					// get klicensee struct
-					vshnet_5EE098BC = (void*)((int)getNIDfunc("vshnet", 0x5EE098BC, 0));
+					vshnet_5EE098BC = getNIDfunc("vshnet", 0x5EE098BC, 0);
 					int* func_start = (int*)(*((int*)vshnet_5EE098BC));
 					npklic_struct_offset = (((*func_start) & 0x0000FFFF) << 16) + ((*(func_start+5)) & 0x0000FFFF) + 0xC;//8;
 				}
@@ -2334,12 +2334,12 @@ static void wwwd_thread(uint64_t arg)
  #endif
 #endif
 
-	View_Find = (void*)((int)getNIDfunc("paf", 0xF21655F3, 0));
-	plugin_GetInterface = (void*)((int)getNIDfunc("paf", 0x23AFB290, 0));
+	View_Find = getNIDfunc("paf", 0xF21655F3, 0);
+	plugin_GetInterface = getNIDfunc("paf", 0x23AFB290, 0);
 
 #ifdef SYS_BGM
-	BgmPlaybackEnable  = (void*)((int)getNIDfunc("vshmain", 0xEDAB5E5E, 16*2));
-	BgmPlaybackDisable = (void*)((int)getNIDfunc("vshmain", 0xEDAB5E5E, 17*2));
+	BgmPlaybackEnable  = getNIDfunc("vshmain", 0xEDAB5E5E, 16*2);
+	BgmPlaybackDisable = getNIDfunc("vshmain", 0xEDAB5E5E, 17*2);
 #endif
 
 	//pokeq(0x8000000000003560ULL, 0x386000014E800020ULL); // li r3, 0 / blr
