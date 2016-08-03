@@ -15,9 +15,7 @@ int (*set_SSHT_)(int) = NULL;
 
 int opd[2] = {0, 0};
 
-void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset);
-
-void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
+static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 {
 	// 0x10000 = ELF
 	// 0x10080 = segment 2 start
@@ -102,7 +100,7 @@ static void launch_disc(char *category, char *seg_name)
 
 	if(view)
 	{
-		char explore_command[128]; // info: http://www.ps3devwiki.com/ps3/explore_plugin
+		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
 		// default segment
 		if(!seg_name[0]) sprintf(seg_name, "seg_device");

@@ -336,7 +336,7 @@ static void cache_icon0_and_param_sfo(char *templn)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(filecopy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_)==CELL_FS_SUCCEEDED) break;
+			if(file_copy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_)==CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -347,12 +347,13 @@ static void cache_icon0_and_param_sfo(char *templn)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(filecopy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE)==CELL_FS_SUCCEEDED) break;
+			if(file_copy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE)==CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
 }
-#ifndef LITE_EDITION
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
 static void cache_file_to_hdd(char *source, char *target, const char *basepath, char *templn)
 {
 	strcpy(target, basepath);
@@ -364,7 +365,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 		sprintf(templn, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, basepath);
 		show_msg((char*)templn);
 		copy_in_progress = true; copied_count = 1;
-		filecopy(source, target, COPY_WHOLE_FILE);
+		file_copy(source, target, COPY_WHOLE_FILE);
 		copy_in_progress = false;
 
 		if(copy_aborted)
@@ -374,7 +375,9 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 		}
 	}
 }
+ #endif
 #endif
+
 static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u8 is_binary, bool mount_ps3, bool forced_mount)
 {
 	//unmount game
@@ -399,10 +402,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 
 		int plen=10;
 #ifdef COPY_PS3
-		if(islike(param, "/copy.ps3")) plen=IS_COPY;
-		char target[MAX_PATH_LEN];
+		char target[MAX_PATH_LEN] = "", *pos;
+		if(islike(param, "/copy.ps3")) {plen = IS_COPY; pos = strstr(param, "&to="); if(pos) {strcpy(target, pos + 4); pos[0] = NULL;}}
 #endif
-		char enc_dir_name[1024], *source = param+plen;
+		char enc_dir_name[1024], *source = param + plen;
 		bool mounted=false; max_mapped=0;
 		is_binary=1;
 
@@ -513,7 +516,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				char fpath[MAX_PATH_LEN], fname[MAX_PATH_LEN], tempID[10]; tempstr[0] = tempID[0] = NULL;
 
 				// get iso name
-				strcpy(fname, strrchr(source, '/')+1);
+				strcpy(fname, strrchr(source, '/') + 1);
 				strcpy(fpath, source); fpath[strlen(fpath)-strlen(fname)-1] = NULL;
 
 				get_default_icon(tempstr, fpath, fname, 0, tempID, -1, 0);
@@ -531,6 +534,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				{
 					sprintf(target, "%s", cp_path);
 				}
+				else
+				if(target[0]) {if(!isDir(source) && isDir(target)) strcat(target, strrchr(source, '/'));}
 				else
 #ifdef SWAP_KERNEL
 				if(strstr(source, "/lv2_kernel"))
@@ -554,19 +559,19 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 								sprintf(target, "/dev_flash/rebug/cobra/stage2.cex");
 						}
 
-						if(file_exists(target)==false)
+						if(file_exists(target) == false)
 						{
 							sprintf(tempstr, "%s", source);
 							strcpy(strrchr(tempstr, '/'), "/stage2.bin");
-							if(file_exists(tempstr)) filecopy(tempstr, target, COPY_WHOLE_FILE);
+							if(file_exists(tempstr)) file_copy(tempstr, target, COPY_WHOLE_FILE);
 						}
 
 						// copy: /dev_flash/sys/lv2_self
 						sprintf(target, "/dev_blind/sys/lv2_self");
-						if(cellFsStat(target, &buf) != CELL_FS_SUCCEEDED || buf.st_size != size)
-							filecopy(source, target, COPY_WHOLE_FILE);
+						if((cellFsStat(target, &buf) != CELL_FS_SUCCEEDED) || (buf.st_size != size))
+							file_copy(source, target, COPY_WHOLE_FILE);
 
-						if(cellFsStat(target, &buf)==CELL_FS_SUCCEEDED && buf.st_size == size)
+						if((cellFsStat(target, &buf) == CELL_FS_SUCCEEDED) && (buf.st_size == size))
 						{
 							uint64_t lv2_offset=0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
 							if(peek_lv1(lv2_offset)!=0x2F666C682F6F732FULL)
@@ -769,7 +774,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				// breadcrumb trail //
 				strcpy(templn, target); char *swap=tempstr; u16 tlen=0;
 				while(strchr(templn+1, '/'))
-                {
+				{
 					templn[strchr(templn+1, '/')-templn] = NULL;
 					tlen+=strlen(templn)+1;
 
@@ -864,7 +869,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				else if(isDir(source))
 					folder_copy(source, target);
 				else
-					filecopy(source, target, COPY_WHOLE_FILE);
+					file_copy(source, target, COPY_WHOLE_FILE);
 
 				copy_in_progress = false;
 
@@ -997,10 +1002,10 @@ static void mount_autoboot(void)
 
 	// get autoboot path
 	if(webman_config->autob &&
-      ((cobra_mode && islike(webman_config->autoboot_path, "/net")) || islike(webman_config->autoboot_path, "http") || file_exists(webman_config->autoboot_path))) // autoboot
+		((cobra_mode && islike(webman_config->autoboot_path, "/net")) || islike(webman_config->autoboot_path, "http") || file_exists(webman_config->autoboot_path))) // autoboot
 		strcpy(path, (char *) webman_config->autoboot_path);
 	else
-	{   // get last game path
+	{	// get last game path
 		sprintf(path, WMTMP "/last_game.txt");
 		if(webman_config->lastp && file_exists(path))
 		{
@@ -1022,7 +1027,7 @@ static void mount_autoboot(void)
 
 	if(from_reboot && !path[0] && strstr(path, "/PS2")) return; //avoid re-launch PS2 returning to XMB
 
-    // wait few seconds until path becomes ready
+	// wait few seconds until path becomes ready
 	if(strlen(path)>10 || (cobra_mode && islike(path, "/net")))
 	{
 		waitfor((char*)path, 2*(webman_config->boots+webman_config->bootd));
@@ -1112,7 +1117,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x2FD810;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.30f)
 		{
 			pokeq(0x80000000002979D8ULL, 0x4E80002038600000ULL );
@@ -1132,7 +1137,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x2FF460; //35E050
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.31f)
 		{
 			pokeq(0x80000000002979E0ULL, 0x4E80002038600000ULL );
@@ -1151,7 +1156,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x2FF470;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.40f)
 		{
 			pokeq(0x8000000000296DE8ULL, 0x4E80002038600000ULL );
@@ -1170,7 +1175,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x2FF9E0;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.41f)
 		{
 			pokeq(0x8000000000296DF0ULL, 0x4E80002038600000ULL ); // fix 8001003C error
@@ -1189,7 +1194,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x2FF9F0;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.46f)
 		{
 			pokeq(0x8000000000297310ULL, 0x4E80002038600000ULL ); // fix 8001003C error
@@ -1208,7 +1213,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x2FFF58;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.50f)
 		{
 			pokeq(0x800000000026F61CULL, 0x4E80002038600000ULL ); // fix 8001003C error
@@ -1227,7 +1232,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x302100;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.53f)
 		{
 			pokeq(0x800000000026F7F0ULL, 0x4E80002038600000ULL ); // fix 8001003C error
@@ -1246,7 +1251,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x302108;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.55f)
 		{
 			pokeq(0x800000000027103CULL, 0x4E80002038600000ULL ); // fix 8001003C error
@@ -1265,7 +1270,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x3051D0;
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.60f)
 		{
 			pokeq(0x80000000002925D8ULL, 0x4E80002038600000ULL ); // fix 8001003C error
@@ -1304,7 +1309,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sc_142=0x306478; //0x363A18 + 142*8 = 00363E88 -> 80 00 00 00 00 30 64 78
 #endif
 		}
-        else
+		else
 		if(c_firmware==4.65f || c_firmware==4.66f)
 		{
 			//patches by deank
@@ -1327,11 +1332,11 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		 /*
 			//anti-ode patches by deank
 			if(!is_rebug)
-            {
+			{
 				//pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL ); //replaced by deank's patch (2015-01-03)
 				pokeq(0x8000000000055C84ULL, 0x6000000060000000ULL );
 				pokeq(0x8000000000055C8CULL, 0x600000003BA00000ULL );
-            }
+			}
 
 			//pokeq(0x80000000002A1060ULL, 0x386000014E800020ULL); // fix 0x80010017 error   Original: 0xFBC1FFF0EBC225B0ULL
 			//pokeq(0x8000000000055C5CULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
@@ -1842,7 +1847,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			//patches by deank
 			pokeq(0x800000000026D7F4ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
 			pokeq(0x800000000026D7FCULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
-            pokeq(0x8000000000059F58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
+			pokeq(0x8000000000059F58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
 			pokeq(0x800000000005A01CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
 
 			pokeq(0x8000000000059FC8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
@@ -1954,7 +1959,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 	char titleID[10];
 
-	if(!strcmp(_path, "/dev_bdvd")) {do_umount(false); goto exit_mount;}
+	if(islike(_path, "/dev_bdvd")) {do_umount(false); goto exit_mount;}
 
 #ifndef COBRA_ONLY
  #ifdef EXT_GDATA
@@ -1965,19 +1970,19 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// save lastgame.bin / process _next & _prev commands
 	if(do_eject)
 	{
-    	bool _prev=false, _next=false;
+		bool _prev=false, _next=false;
 
 		_next=(bool)(!strcmp(_path, "_next"));
-    	_prev=(bool)(!strcmp(_path, "_prev"));
+		_prev=(bool)(!strcmp(_path, "_prev"));
 
 		int fd=0;
-    	_lastgames lastgames; memset(&lastgames, 0, sizeof(_lastgames)); lastgames.last=0xFF;
+		_lastgames lastgames; memset(&lastgames, 0, sizeof(_lastgames)); lastgames.last=0xFF;
 
 		if(cellFsOpen((char*)WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			cellFsRead(fd, (void *)&lastgames, sizeof(_lastgames), NULL);
 			cellFsClose(fd);
-    	}
+		}
 
 		if(_next || _prev)
 		{
@@ -1992,7 +1997,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				if(lastgames.last==LAST_GAMES_UPPER_BOUND) lastgames.last=0; else lastgames.last++;
 			}
 			if(lastgames.game[lastgames.last][0]!='/') lastgames.last=0;
-    		if(lastgames.game[lastgames.last][0]!='/' || strlen(lastgames.game[lastgames.last])<7) goto exit_mount;
+			if(lastgames.game[lastgames.last][0]!='/' || strlen(lastgames.game[lastgames.last])<7) goto exit_mount;
 
 			strcpy(_path, lastgames.game[lastgames.last]);
 		}
@@ -2015,7 +2020,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				if(lastgames.last>=MAX_LAST_GAMES) lastgames.last=0;
 				strcpy(lastgames.game[lastgames.last], _path);
 			}
-    	}
+		}
 
 		savefile((char*)WMTMP "/last_games.bin", (char *)&lastgames, sizeof(_lastgames));
 	}
@@ -2101,19 +2106,19 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			}
 
 			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
-			if(filecopy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
+			if(file_copy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
 			{
 				if(file_exists(PS2_CLASSIC_ISO_ICON ".bak")==false)
-					filecopy((char*)PS2_CLASSIC_ISO_ICON, (char*)(PS2_CLASSIC_ISO_ICON ".bak"), COPY_WHOLE_FILE);
+					file_copy((char*)PS2_CLASSIC_ISO_ICON, (char*)(PS2_CLASSIC_ISO_ICON ".bak"), COPY_WHOLE_FILE);
 
 				sprintf(temp, "%s.png", _path);
 				if(file_exists(temp)==false) sprintf(temp, "%s.PNG", _path);
 
 				cellFsUnlink(PS2_CLASSIC_ISO_ICON);
 				if(file_exists(temp))
-					filecopy(temp, (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+					file_copy(temp, (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
 				else
-					filecopy((char*)(PS2_CLASSIC_ISO_ICON ".bak"), (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+					file_copy((char*)(PS2_CLASSIC_ISO_ICON ".bak"), (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
 
 				if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
@@ -2192,7 +2197,7 @@ mount_again:
 			//else
 			//	sys_timer_usleep(50000);
 
-			u8 iso_num=1;
+			u8 iso_parts = 1;
 			char templn[MAX_LINE_LEN];
 			char iso_list[MAX_ISO_PARTS][MAX_PATH_LEN];
 			char *cobra_iso_list[MAX_ISO_PARTS];
@@ -2211,7 +2216,7 @@ mount_again:
 					sprintf(templn, "%s.%i", path2, n);
 					if(file_exists(templn))
 					{
-						iso_num++;
+						iso_parts++;
 						strcpy(iso_list[n], templn);
 						cobra_iso_list[n] = (char*)iso_list[n];
 					}
@@ -2397,7 +2402,7 @@ mount_again:
 					}
  #endif //#ifdef FIX_GAME
 
-					cobra_mount_ps3_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_ps3_disc_image(cobra_iso_list, iso_parts);
 					sys_timer_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
@@ -2579,13 +2584,13 @@ copy_ps2iso_to_hdd0:
 					}
 				}
 				else if(strstr(_path, "/DVDISO") || mount_unk == EMU_DVD)
-					cobra_mount_dvd_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_dvd_disc_image(cobra_iso_list, iso_parts);
 				else if(strstr(_path, "/BDISO")  || mount_unk == EMU_BD)
-					cobra_mount_bd_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_bd_disc_image(cobra_iso_list, iso_parts);
 				else
 				{
 					// mount iso as data
-					cobra_mount_bd_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_bd_disc_image(cobra_iso_list, iso_parts);
 					sys_timer_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
@@ -2871,7 +2876,7 @@ patch:
 	else if(c_firmware==4.80f)
 		sprintf(expplg, "%s/IEXP0_480.BIN", app_sys);
 	else
-        sprintf(expplg, "%s/none", app_sys);
+		sprintf(expplg, "%s/none", app_sys);
 
 	if(do_eject && file_exists(expplg))
 		add_to_map( (char*)"/dev_flash/vsh/module/explore_plugin.sprx", expplg);
@@ -2939,7 +2944,7 @@ exit_mount:
 
 #ifdef FIX_GAME
 	// re-check PARAM.SFO to notify if game needs to be fixed
-	if(ret && (c_firmware<4.80f))
+	if(ret && (c_firmware<LATEST_CFW))
 	{
 		char filename[64];
 		sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");
