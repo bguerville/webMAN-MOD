@@ -180,7 +180,7 @@
 
 							refresh_xml((char*)msg);
 						}
-                        else
+						else
 						if( (!(webman_config->combo & SHOW_TEMP) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & (CELL_PAD_CTRL_R3 | CELL_PAD_CTRL_START)))) // SELECT+START show temperatures / hdd space
 						{
 #ifdef VIDEO_REC
@@ -344,7 +344,7 @@ show_popup:
 													STR_STORAGE, (int)((blockSize*freeSize)>>20), STR_MBFREE,
 													STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
 
-								if(R2 && gTick.tick>rTick.tick)
+								if(R2 && (gTick.tick>rTick.tick))
 								{
 									////// play time //////
 									ss = (u32)((pTick.tick-gTick.tick)/1000000);
@@ -653,8 +653,9 @@ show_popup:
 							else
 #endif
 							{
+#ifndef LITE_EDITION
 								enable_ingame_screenshot();
-
+#endif
 								show_idps(msg);
 							}
 						}

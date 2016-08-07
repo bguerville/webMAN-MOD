@@ -10,6 +10,11 @@
 #define HTML_PASSW(n, v, m, s)	"<input name=\"" n "\" type=\"password\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
 #define HTML_NUMBER(n, v, m, s, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\" min=\"" min "\" max=\"" max "\">"
 
+#define HTML_DISABLED_CHECKBOX	"1\" disabled=\"disabled"
+
+#define HTML_FORM_METHOD_FMT	"%s"
+#define HTML_FORM_METHOD		".ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+
 #define _BR_					NULL
 
 #define HTML_RESPONSE_FMT		"HTTP/1.1 %i OK\r\n" \
@@ -33,6 +38,7 @@
 #define HTML_BLU_SEPARATOR		"<hr color=\"#0099FF\"/>"
 #define HTML_RED_SEPARATOR		"<hr color=\"#FF0000\"/>"
 
+#define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){window.location=\"%s\"},3000);</script>"
 
 int extcmp(const char *s1, const char *s2, size_t n);
@@ -45,18 +51,20 @@ static char h2a(char hex)
 	if(c>=0 && c<=9)
 		c += '0';
 	else if(c>=10 && c<=15)
-		c += 0x57; //a-f
+		c += 55; //A-F
 	return c;
 }
 
-static void urlenc(char *dst, char *src, u8 rel_mode)
+static bool urlenc(char *dst, char *src)
 {
-	size_t j=0;
-	size_t n=strlen(src);
-	for(size_t i=0; i<n; i++,j++)
+	size_t j = 0, n = strlen(src), pos = 0;
+
+	if(src[0] == 'h' && src[1] == 't' && src[2] == 't' && src[3] == 'p' && (src[4] == ':' || src[5] == ':') && (n > 7)) pos = MAX((*(const unsigned char*)strchr(src + 7, '/') - *(const unsigned char*)src), 0);
+
+	for(size_t i = 0; i < n; i++, j++)
 	{
-		     if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
-		else if(src[i]==':' && rel_mode) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
+			 if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
+		else if(src[i]==':' && (i >= pos)) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
 		else if(src[i] & 0x80)
 		{
 			dst[j++] = '%';
@@ -72,12 +80,14 @@ static void urlenc(char *dst, char *src, u8 rel_mode)
 		else dst[j] = src[i];
 	}
 	dst[j] = '\0';
+
+	return (j > n); // true if dst != src
 }
 
 static void htmlenc(char *dst, char *src, u8 cpy2src)
 {
 	size_t j=0;
-    size_t n=strlen(src); char tmp[8]; memset(dst, 4*n, 0); u8 t, c;
+	size_t n=strlen(src); char tmp[8]; memset(dst, 4*n, 0); u8 t, c;
 	for(size_t i=0; i<n; i++)
 	{
 		if(src[i] & 0x80)
@@ -121,7 +131,7 @@ static void utf8enc(char *dst, char *src, u8 cpy2src)
 	if(cpy2src) strncpy(src, dst, MAX_LINE_LEN);
 }
 /*
-static void utf8dec(char *dst, char *src, u8 cpy2src))
+static void utf8dec(char *dst, char *src, u8 cpy2src)
 {
 	size_t j=0;
 	size_t n=strlen(src); u8 c;
@@ -298,34 +308,34 @@ static bool islike(const char *param, const char *text)
 
 static int val(const char *c)
 {
-    int previous_result=0, result=0;
-    int multiplier=1;
+	int previous_result=0, result=0;
+	int multiplier=1;
 
-    if(c && *c == '-')
-    {
-        multiplier = -1;
-        c++;
-    }
+	if(c && *c == '-')
+	{
+		multiplier = -1;
+		c++;
+	}
 
-    while(*c)
-    {
-        if(*c < '0' || *c > '9') return result * multiplier;
+	while(*c)
+	{
+		if(*c < '0' || *c > '9') return result * multiplier;
 
-        result *= 10;
-        if(result < previous_result)
-            return(0);
-        else
-            previous_result *= 10;
+		result *= 10;
+		if(result < previous_result)
+			return(0);
+		else
+			previous_result *= 10;
 
-        result += *c - '0';
-        if(result < previous_result)
-            return(0);
-        else
-            previous_result += *c - '0';
+		result += *c - '0';
+		if(result < previous_result)
+			return(0);
+		else
+			previous_result += *c - '0';
 
-        c++;
-    }
-    return(result * multiplier);
+		c++;
+	}
+	return(result * multiplier);
 }
 
 static void get_value(char *text, char *url, u16 size)

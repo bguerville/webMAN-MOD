@@ -14,6 +14,8 @@
 #define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
 //#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
 
+#define XML_KEY_LEN 7
+
 static void refresh_xml(char *msg)
 {
 	webman_config->profile=profile; save_settings();
@@ -89,7 +91,7 @@ static void add_launchpad_extras(char *tempstr, char *url)
 	sprintf(url, "http://%s/setup.ps3", local_ip);
 	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png");
 
-	sprintf(url, "http://%s/mount.ps3/unmount", local_ip);
+	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
 	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png");
 
 	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
@@ -521,8 +523,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 		if(( f0<7 || f0>NTFS) && file_exists(drives[f0])==false) continue;
 //
-		if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
-
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+		if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+ #endif
+#endif
 		ns=-2; uprofile=profile;
 		for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 		{
@@ -563,6 +568,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
+			if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
 			if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
  #endif
 #endif
@@ -773,7 +779,7 @@ next_xml_entry:
 
 							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {strcat(templn, " ["); strcat(templn, tempID); strcat(templn, "]");}
 
-							urlenc(enc_dir_name, entry.d_name, 0);
+							urlenc(enc_dir_name, entry.d_name);
 
 							// subfolder name
 							if(f0==NTFS && entry.d_name[0]=='[')
@@ -825,7 +831,11 @@ continue_reading_folder_xml:
 			if(is_net && ls && (li<27)) {li++; goto subfolder_letter_xml;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_xml;}
 //
 		}
-		if(is_net && ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+		if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+ #endif
+#endif
 	}
 
 
@@ -856,7 +866,7 @@ continue_reading_folder_xml:
 		{
 			for(n=0; n<(key-1); n++)
 				for(m=(n+1); m<key; m++)
-					if(strcasecmp(skey[n]+1, skey[m]+1)>0)
+					if(strncasecmp(skey[n]+1, skey[m]+1, XML_KEY_LEN) > 0)
 					{
 						strcpy(swap, skey[n]);
 						strcpy(skey[n], skey[m]);
@@ -866,7 +876,7 @@ continue_reading_folder_xml:
 		else
 			for(n=0; n<(key-1); n++)
 				for(m=(n+1); m<key; m++)
-					if(strcasecmp(skey[n], skey[m])>0)
+					if(strncasecmp(skey[n], skey[m], XML_KEY_LEN)>0)
 					{
 						strcpy(swap, skey[n]);
 						strcpy(skey[n], skey[m]);
@@ -1012,7 +1022,7 @@ continue_reading_folder_xml:
 															XML_PAIR("info","%'i %s") "%s",
 															wm_icons[3], item_count[4], STR_PSPFORMAT, STR_NOITEM_PAIR);strcat(myxml, templn);}
 		if( !(webman_config->cmask & DVD) ||
-            !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"wm_dvd\">"
+			!(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"wm_dvd\">"
 															XML_PAIR("icon","%s")
 															XML_PAIR("title","%s")
 															XML_PAIR("info","%'i %s") "%s",
