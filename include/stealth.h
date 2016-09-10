@@ -39,7 +39,7 @@ static void restore_cfw_syscalls(void)
 static void restore_blocked_urls(void)
 {
 	// restore blocked servers (XMB only)
-	if(View_Find("game_plugin")==0) {for(u8 u = 0; u<url_count; u++) poke_lv1(blocked_url[u][0], blocked_url[u][1]); url_count = 0;}
+	if(IS_ON_XMB) {for(u8 u = 0; u<url_count; u++) poke_lv1(blocked_url[u][0], blocked_url[u][1]); url_count = 0;}
 }
 
 static void remove_cfw_syscall8(void)
@@ -112,6 +112,21 @@ static void disable_cfw_syscalls(bool keep_ccapi)
 	}
 	else
 	{
+#ifndef ENGLISH_ONLY
+		char STR_CFWSYSRIP[128];//	= "Removal History files & CFW Syscalls in progress...";
+		char STR_RMVCFWSYS[136];//	= "History files & CFW Syscalls deleted OK!";
+		char STR_RMVCFWSYSF[80];//	= "Failed to remove CFW Syscalls";
+
+		sprintf(STR_CFWSYSRIP,   "Removal History files & CFW Syscalls in progress...");
+		sprintf(STR_RMVCFWSYS,   "History files & CFW Syscalls deleted OK!");
+		sprintf(STR_RMVCFWSYSF,  "Failed to remove CFW Syscalls");
+
+		language("STR_CFWSYSRIP", STR_CFWSYSRIP);
+		language("STR_RMVCFWSYS", STR_RMVCFWSYS);
+		language("STR_RMVCFWSYSF", STR_RMVCFWSYSF);
+
+		language("/CLOSEFILE", NULL);
+#endif
 		show_msg((char*)STR_CFWSYSRIP);
 		remove_cfw_syscalls(keep_ccapi);
 		delete_history(true);
@@ -153,7 +168,7 @@ static void block_online_servers(bool notify)
 {
 	if(url_count == 0)
 	{
-		if(View_Find("game_plugin")) return; // not in XMB
+		if(IS_INGAME) return; // not in XMB
 
 		if(notify) show_msg((char*)"Blocking PSN servers");
 
@@ -227,37 +242,4 @@ static void block_online_servers(bool notify)
 	{
 		if(url_count > 0) show_msg((char*)"PSN servers blocked");
 	}
-}
-
-static void show_idps(char *msg)
-{
-	uint64_t eid0_idps[2], buffer[0x40], start_sector;
-	uint32_t read;
-	sys_device_handle_t source;
-	if(sys_storage_open(0x100000000000004ULL, 0, &source, 0)!=0)
-	{
-		start_sector = 0x204;
-		sys_storage_close(source);
-		sys_storage_open(0x100000000000001ULL, 0, &source, 0);
-	}
-	else start_sector = 0x178;
-	sys_storage_read(source, 0, start_sector, 1, buffer, &read, 0);
-	sys_storage_close(source);
-
-	eid0_idps[0]=buffer[0x0E];
-	eid0_idps[1]=buffer[0x0F];
-
-	get_idps_psid();
-
-	#define SEP "\n                  "
-	sprintf((char*) msg, "IDPS EID0 : %016llX%s"
-									 "%016llX\n"
-						 "IDPS LV2  : %016llX%s"
-									 "%016llX\n"
-						 "PSID LV2 : %016llX%s"
-									"%016llX", eid0_idps[0], SEP, eid0_idps[1], IDPS[0], SEP, IDPS[1], PSID[0], SEP, PSID[1]);
-	#undef SEP
-
-	show_msg((char*) msg);
-	sys_timer_sleep(2);
 }

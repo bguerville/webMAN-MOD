@@ -50,7 +50,7 @@ typedef struct
 	5 -> mode 0x14 for data, 0x10 for audio
 	6 -> track number (from 1)
 	7 -> 0
-	8, 9, 10, 11 -> countain an u32 with the LBA
+	8, 9, 10, 11 -> contain an u32 with the LBA
 
 	....
 	....
@@ -106,7 +106,7 @@ typedef struct
 	// numbers sector array 8
 } __attribute__((packed)) psxseciso_args;
 
-volatile int eject_running = 1;
+volatile int eject_running = 0;
 
 uint32_t real_disctype;
 ScsiTrackDescriptor tracks[64];
@@ -125,8 +125,11 @@ static sys_device_info_t disc_info;
 
 static uint64_t usb_device = 0ULL;
 
+#ifdef RAWISO_PSX_MULTI
 static sys_ppu_thread_t thread_id_eject = -1;
-static int ntfs_running = 1;
+#endif
+
+static int ntfs_running = 0;
 
 static volatile int do_run = 0;
 
@@ -401,7 +404,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 		}
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 int last_index = -1;
@@ -475,9 +478,10 @@ static int process_read_file_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t siz
 		}
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
+#ifdef RAWISO_PSX_MULTI
 int psx_indx = 0;
 
 uint32_t *psx_isos_desc;
@@ -558,11 +562,11 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 			{
 				if(ret == (int) 0x8001002B) return (int) 0x8001000A; // EBUSY
 
-				return 0;
+				return CELL_OK;
 			}
 			else if(readsize != p)
 			{
-				if((offset + readsize) < discsize) return 0;
+				if((offset + readsize) < discsize) return CELL_OK;
 			}
 		}
 		else
@@ -578,8 +582,9 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 		lba++;
 	}
 
-	return 0;
+	return CELL_OK;
 }
+#endif
 
 static void my_memcpy(uint8_t *dst, uint8_t *src, int size)
 {
@@ -617,7 +622,7 @@ static int process_read_cd_2048_cmd_iso(uint8_t *buf, uint32_t start_sector, uin
 		start_sector++;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t remaining)
@@ -656,7 +661,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 
 				if(remaining == copy_size)
 				{
-					return 0;
+					return CELL_OK;
 				}
 
 				remaining -= copy_size;
@@ -683,7 +688,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 		sys_addr_t addr;
 
 		int ret = sys_memory_allocate(_192KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr);
-		if(ret != 0)
+		if(ret != CELL_OK)
 		{
 			//DPRINTF("sys_memory_allocate failed: %x\n", ret);
 			return ret;
@@ -697,7 +702,8 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 
 	memcpy(buf, cd_cache, remaining * CD_SECTOR_SIZE_2352);
 	cached_cd_sector = sector;
-	return 0;
+
+	return CELL_OK;
 }
 
 #ifdef RAWISO_PSX_MULTI
@@ -789,7 +795,7 @@ static int ejected_disc(void)
 				counter = 0;
 
 				ejected = 1;
-				return 0;
+				return CELL_OK;
 			}
 			else
 				return FAILED;
@@ -822,7 +828,7 @@ static int ejected_disc(void)
 		if(!ejected)
 		{
 			ejected = 1;
-			return 0;
+			return CELL_OK;
 		}
 		else
 			return FAILED;
@@ -837,10 +843,9 @@ static void eject_thread(uint64_t arg)
 
 	while(eject_running)
 	{
-		int ret;
-
 		if(emu_mode == EMU_PSX_MULTI)
 		{
+			int ret;
 			ret = ejected_disc();
 
 			if(ret == 0)
@@ -894,7 +899,6 @@ static void eject_thread(uint64_t arg)
 				else {fake_insert_event(BDVD_DRIVE, real_disctype);}
 			}
 		}
-
 
 		sys_timer_usleep(70000);
 	}
@@ -988,7 +992,7 @@ static void rawseciso_thread(uint64_t arg)
 
 		if(num_tracks > 0xFF)
 		{
-			CD_SECTOR_SIZE_2352 = (num_tracks & 0xffff00)>>4;
+			CD_SECTOR_SIZE_2352 = (num_tracks & 0xff00)>>4;
 		}
 
 		if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
@@ -1142,8 +1146,10 @@ static void rawseciso_thread(uint64_t arg)
 				{
 					if(is_cd2352 == 1)
 						ret = process_read_cd_2048_cmd_iso(buf, offset / CD_SECTOR_SIZE_2048, size / CD_SECTOR_SIZE_2048);
+#ifdef RAWISO_PSX_MULTI
 					else
 						ret = process_read_psx_cmd_iso(buf, offset / CD_SECTOR_SIZE_2048, size / CD_SECTOR_SIZE_2048, CD_SECTOR_SIZE_2048);
+#endif
 				}
 				else
 				{
@@ -1182,8 +1188,10 @@ static void rawseciso_thread(uint64_t arg)
 			{
 				if(is_cd2352 == 1)
 					ret = process_read_cd_2352_cmd_iso(buf, offset / CD_SECTOR_SIZE_2352, size / CD_SECTOR_SIZE_2352);
+#ifdef RAWISO_PSX_MULTI
 				else
 					ret = process_read_psx_cmd_iso(buf, offset / CD_SECTOR_SIZE_2352, size / CD_SECTOR_SIZE_2352, CD_SECTOR_SIZE_2352);
+#endif
 			}
 			break;
 		}
@@ -1199,16 +1207,14 @@ static void rawseciso_thread(uint64_t arg)
 				continue;
 			}
 
-			//DPRINTF("sys_event_port_send failed: %x\n", ret);
 			break;
 		}
 
+		//DPRINTF("sys_event_port_send failed: %x\n", ret);
 		if(ret != 0) break;
 	}
 
-	do_run = 0;
-
-	eject_running = 0;
+	do_run = eject_running = 0;
 
 	sys_memory_free((sys_addr_t)args);
 
@@ -1247,8 +1253,6 @@ static void rawseciso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
 
-	//DPRINTF("rawseciso_stop_thread\n");
-
 	ntfs_running = do_run = 0;
 
 	if(command_queue_ntfs != (sys_event_queue_t)-1)
@@ -1264,13 +1268,14 @@ static void rawseciso_stop_thread(uint64_t arg)
 		sys_ppu_thread_join(thread_id_ntfs, &exit_code);
 	}
 
+#ifdef RAWISO_PSX_MULTI
 	eject_running = 0;
 
 	if(thread_id_eject != (sys_ppu_thread_t)-1)
 	{
 		sys_ppu_thread_join(thread_id_eject, &exit_code);
 	}
+#endif
 
-	//DPRINTF("Exiting stop thread!\n");
 	sys_ppu_thread_exit(0);
 }
