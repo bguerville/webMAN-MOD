@@ -7,11 +7,6 @@
 
 #define REC_PLUGIN "rec_plugin"
 
-void show_rec_format(char *msg);
-bool rec_start(char *param);
-void toggle_video_rec(char *param);
-void set_setting_to_change(char *msg, char *text);
-
 /* video format ( in CellRecParam )
  *
  *   SMALL  = 320x240 (4:3) or 368x208 (16:9)
@@ -95,7 +90,7 @@ bool recording = false;
 uint32_t *recOpt = NULL;              // recording utility vsh options struct
 int32_t (*reco_open)(int32_t) = NULL; // base pointer
 
-void set_setting_to_change(char *msg, char *text)
+static void set_setting_to_change(char *msg, const char *text)
 {
 	sprintf(msg, "%s", text);
 	if(rec_setting_to_change == 0) strcat(msg, "Recording Options"); else
@@ -106,7 +101,7 @@ void set_setting_to_change(char *msg, char *text)
 	if(rec_setting_to_change == 5) strcat(msg, "Audio Bitrate");
 }
 
-void show_rec_format(char *msg)
+static void show_rec_format(const char *msg)
 {
 	char text[200]; uint32_t flags;
 	sprintf(text, "%s\nVideo: ", msg);
@@ -152,7 +147,7 @@ void show_rec_format(char *msg)
 	show_msg(text);
 }
 
-bool rec_start(char *param)
+static bool rec_start(const char *param)
 {
 	char *pos; uint8_t n;
 
@@ -168,36 +163,37 @@ bool rec_start(char *param)
 	{
 		if(strcasestr(param, ".mp4"))
 		{
-			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_5000K_30FPS;										// .mp4 (720p)
+			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_5000K_30FPS;									// .mp4 (720p)
 
-			if(strcasestr(param, "240"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_768K_30FPS;		// .mp4 (240p / 208p)
-			if(strcasestr(param, "272"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_MIDDLE_768K_30FPS;		// .mp4 (272p)
-			if(strcasestr(param, "368"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_LARGE_2048K_30FPS;		// .mp4 (368p)
+			if(strstr(param, "240"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_768K_30FPS;		// .mp4 (240p / 208p)
+			if(strstr(param, "272"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_MIDDLE_768K_30FPS;		// .mp4 (272p)
+			if(strstr(param, "368"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_LARGE_2048K_30FPS;		// .mp4 (368p)
 		}
 
 		if(strcasestr(param, "jpeg")) {rec_video_format = CELL_REC_PARAM_VIDEO_FMT_YOUTUBE_MJPEG; rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_YOUTUBE_MJPEG;}	// mjpeg
 
 		if(strcasestr(param, "psp"))
 		{
-			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_SMALL_768K_30FPS;									// psp (512k)
-			if(strcasestr(param, "hd"))    rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_SMALL_768K_30FPS;		// psp m4hd
+			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_SMALL_768K_30FPS;								// psp (512k)
+			if(strcasestr(param, "hd"))    rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_SMALL_768K_30FPS;	// psp m4hd
 		}
 		else
 		if(strcasestr(param, "hd"))
 		{
-			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_11000K_30FPS;									// hd (11000k)
+			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_11000K_30FPS;								// hd (11000k)
 
-			if(strcasestr(param, "768"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_MIDDLE_768K_30FPS;		// hd 768k  (272p)
-			if(strcasestr(param, "1536"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_LARGE_1536K_30FPS;		// hd 1536k (368p)
-			if(strcasestr(param, "2048"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_2048K_30FPS;		// hd 2048k (720p)
+			if(strstr(param, "768"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_MIDDLE_768K_30FPS;		// hd 768k  (272p)
+			if(strstr(param, "1536"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_LARGE_1536K_30FPS;		// hd 1536k (368p)
+			if(strstr(param, "2048"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_2048K_30FPS;		// hd 2048k (720p)
 		}
 		else
 		{
-			if(strcasestr(param, "avc"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;		// avc (psp/ps3)
-			if(strcasestr(param, "512"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_512K_30FPS;		// avc 512k
-			if(strcasestr(param, "768"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;		// avc 768k
-			if(strcasestr(param, "1024")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1024K_30FPS;	// avc 1024k
-			if(strcasestr(param, "1536")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1536K_30FPS;	// avc 1536k
+			if(strcasestr(param, "avc"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;	// avc (psp/ps3)
+
+			if(strstr(param, "512"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_512K_30FPS;		// avc 512k
+			if(strstr(param, "768"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;		// avc 768k
+			if(strstr(param, "1024")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1024K_30FPS;	// avc 1024k
+			if(strstr(param, "1536")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1536K_30FPS;	// avc 1536k
 		}
 	}
 
@@ -216,21 +212,21 @@ bool rec_start(char *param)
 	else
 	if(strcasestr(param, "aac"))
 	{
-		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;								// aac_96k
-		if(strcasestr(param, "64"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;	// aac_64k
-		if(strcasestr(param, "128")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_128K;	// aac_128k
+		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;							// aac_96k
+		if(strstr(param, "64"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;	// aac_64k
+		if(strstr(param, "128")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_128K;	// aac_128k
 	}
 	else
 	if(strcasestr(param, "pcm"))
 	{
-		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_768K;									// pcm_768k
-		if(strcasestr(param, "384"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_384K;		// pcm_384k
-		if(strcasestr(param, "1536")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_1536K;	// pcm_1536k
+		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_768K;								// pcm_768k
+		if(strstr(param, "384"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_384K;		// pcm_384k
+		if(strstr(param, "1536")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_1536K;	// pcm_1536k
 	}
 
 	// validate audio format (use default if invalid)
 	uint32_t audio_formats[8] = {CELL_REC_PARAM_AUDIO_FMT_AAC_64K, CELL_REC_PARAM_AUDIO_FMT_AAC_96K, CELL_REC_PARAM_AUDIO_FMT_AAC_128K, CELL_REC_PARAM_AUDIO_FMT_ULAW_384K, CELL_REC_PARAM_AUDIO_FMT_ULAW_768K, CELL_REC_PARAM_AUDIO_FMT_PCM_384K, CELL_REC_PARAM_AUDIO_FMT_PCM_768K, CELL_REC_PARAM_AUDIO_FMT_PCM_1536K};
-	for(n = 0; n < 8; n++) if(rec_audio_format == audio_formats[n]) break; if(n>=8) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;
+	for(n = 0; n < 8; n++) if(rec_audio_format == audio_formats[n]) break; if(n >= 8) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;
 
 	// set video options
 	recOpt[1] = rec_video_format;
@@ -238,10 +234,7 @@ bool rec_start(char *param)
 	recOpt[5] = (vsh_memory_container_by_id(1) == -1 ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1);
 	recOpt[0x208] = 0x80; // 0x90 show XMB || reduce memsize // 0x80; // allow show XMB
 
-	char g[0x120];
-	game_interface = (game_plugin_interface *)plugin_GetInterface(View_Find("game_plugin"), 1);
-
-	game_interface->gameInfo(g);
+	get_game_info();
 
 	char *vidfile = strstr(param, "/dev_hdd0/");
 
@@ -255,8 +248,8 @@ bool rec_start(char *param)
 
 		CellRtcDateTime t;
 		cellRtcGetCurrentClockLocalTime(&t);
-		sprintf((char*)&recOpt[0x6], "/dev_hdd0/VIDEO/%s_%04d.%02d.%02d_%02d_%02d_%02d.mp4",
-									 g+0x04, t.year, t.month, t.day, t.hour, t.minute, t.second);
+		sprintf((char*)&recOpt[0x6], "%s/%s_%04d.%02d.%02d_%02d_%02d_%02d.mp4",
+									 "/dev_hdd0/VIDEO", _game_TitleID, t.year, t.month, t.day, t.hour, t.minute, t.second);
 	}
 
 	reco_open(-1); // memory container
@@ -297,9 +290,9 @@ bool rec_start(char *param)
 	}
 }
 
-void toggle_video_rec(char *param)
+static void toggle_video_rec(const char *param)
 {
-	if(View_Find("game_plugin") != 0)    // if game_plugin is loaded -> there is a game/app running and we can recording...
+	if(IS_INGAME)    // if game_plugin is loaded -> there is a game/app running and we can recording...
 	{
 		if(!reco_open)
 		{
@@ -316,7 +309,7 @@ void toggle_video_rec(char *param)
 		if(recording == false)
 		{
 			// not recording yet
-			show_rec_format((char*)"Recording started");
+			show_rec_format("Recording started");
 
 			if(rec_start(param) == false)
 			{
@@ -336,7 +329,8 @@ void toggle_video_rec(char *param)
 			recording = false;
 		}
 	}
-	else recording = false;
+	else
+		recording = false;
 }
 
 #endif // #ifdef VIDEO_REC

@@ -4,25 +4,19 @@
 #define SC_STORAGE_CLOSE 				(601)
 #define SC_STORAGE_INSERT_EJECT			(616)
 
-int file_copy(char *file1, char *file2, uint64_t maxbytes);
+#define NO_MSG							NULL
+
+int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 
 static bool copy_in_progress = false;
 
 static u32 copied_count = 0;
 
-static int isDir(const char* path);
-
-#ifndef LITE_EDITION
-static int del(const char *path, bool recursive);
-#endif
-
-#ifdef COPY_PS3
-static void  import_edats(char *path1, char *path2);
-#endif
-
 #define COPY_WHOLE_FILE		0
+#define SAVE_ALL			0
+
 /*
-static void add_log(const char *fmt, int value1, int value2)
+static void add_log(const char *fmt, const char *value1, int value2)
 {
 	char buffer[2048];
 
@@ -31,7 +25,7 @@ static void add_log(const char *fmt, int value1, int value2)
 	//console_write(buffer);
 	int fd;
 
-	if(cellFsOpen("/dev_hdd0/webMAN.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
+	if(cellFsOpen("/dev_hdd0/webMAN.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		int size = strlen(buffer);
 		cellFsWrite(fd, buffer, size, NULL);
@@ -40,10 +34,18 @@ static void add_log(const char *fmt, int value1, int value2)
 }
 */
 
-static int sysLv2FsLink(const char *oldpath,const char *newpath)
+static int sysLv2FsLink(const char *oldpath, const char *newpath)
 {
 	system_call_2(SC_FS_LINK, (u64)(u32)oldpath, (u64)(u32)newpath);
 	return_to_user_prog(int);
+}
+
+static uint64_t get_free_space(const char *dev_name)
+{
+	uint32_t blockSize;
+	uint64_t freeSize;
+	if(cellFsGetFreeSize(dev_name, &blockSize, &freeSize)  == CELL_FS_SUCCEEDED) return (freeSize * blockSize);
+	return 0;
 }
 
 static int isDir(const char* path)
@@ -61,7 +63,16 @@ static bool file_exists(const char* path)
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
 
-static int savefile(const char *file, char *mem, u64 size)
+#ifndef LITE_EDITION
+static void mkdir_tree(char *path)
+{
+	size_t path_len = strlen(path);
+	for(u16 p = 12; p < path_len; p++)
+		if(path[p] == '/') {path[p] = NULL; cellFsMkdir((char*)path, MODE); path[p] = '/';}
+}
+#endif
+
+static int savefile(const char *file, const char *mem, u64 size)
 {
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);
@@ -70,6 +81,8 @@ static int savefile(const char *file, char *mem, u64 size)
 
 	if(cellFsOpen(file, flags, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
+		if((size == SAVE_ALL) && mem) size = strlen(mem);
+
 		if(size) cellFsWrite(fd, (void *)mem, size, NULL);
 		cellFsClose(fd);
 
@@ -103,13 +116,15 @@ static int concat(char *file1, char *file2)
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(cellFsStat(file1, &buf) != CELL_FS_SUCCEEDED) return ret;
+
+	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		uint64_t size = buf.st_size;
 
 		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
 			// append
 			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_RDWR | CELL_FS_O_APPEND, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
@@ -149,14 +164,14 @@ static int concat(char *file1, char *file2)
 	return ret;
 }
 */
-int file_copy(char *file1, char *file2, uint64_t maxbytes)
+int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 {
 	struct CellFsStat buf;
 	int fd1, fd2;
 	int ret = FAILED;
 	copy_aborted = false;
 
-	if(strcmp(file1, file2) == 0) return FAILED;
+	if(IS(file1, file2)) return FAILED;
 
 #ifdef COPY_PS3
 	sprintf(current_file, "%s", file2);
@@ -169,7 +184,7 @@ int file_copy(char *file1, char *file2, uint64_t maxbytes)
 		if(islike(file1, "/net"))
 		{
 			int ns = connect_to_remote_server((file1[4] & 0xFF) - '0');
-			copy_net_file(file2, file1 + 5, ns, maxbytes);
+			copy_net_file(file2, (char*)file1 + 5, ns, maxbytes);
 			if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
 
 			if(file_exists(file2)) return 0;
@@ -185,31 +200,27 @@ int file_copy(char *file1, char *file2, uint64_t maxbytes)
 		return sysLv2FsLink(file1, file2);
 	}
 
-	uint32_t blockSize;
-	uint64_t freeSize;
-	cellFsGetFreeSize((char*)"/dev_hdd0", &blockSize, &freeSize);
-
-	if(buf.st_size > ((u64)blockSize*freeSize)) return FAILED;
+	if(buf.st_size > get_free_space("/dev_hdd0")) return FAILED;
 
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
 			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 
-			if(islike(file2, "/dev_usb"))
+			if((part_size > 0xFFFFFFFFULL) && islike(file2, "/dev_usb"))
 			{
 				if(!extcasecmp(file2, ".iso", 4)) strcat(file2, ".0"); else strcat(file2, ".66600");
 				part++; part_size = 0xFFFF0000ULL; //4Gb - 64kb
 			}
 
-			uint64_t read = 0, written = 0, pos=0;
+			uint64_t read = 0, written = 0, pos = 0;
 			char *chunk = (char*)sysmem;
 			u16 flen = strlen(file2);
 next_part:
@@ -227,11 +238,12 @@ next_part:
 					cellFsWrite(fd2, chunk, read, &written);
 					if(!written) break;
 
-					pos+=written;
-					size-=written;
-					if(chunk_size>size) chunk_size=(int) size;
+					pos  += written;
+					size -= written;
 
-					part_size-=written;
+					if(chunk_size > size) chunk_size = (int) size;
+
+					part_size -= written;
 					if(part_size == 0) break;
 
 					sys_timer_usleep(1000);
@@ -261,7 +273,7 @@ next_part:
 				else
 					{cellFsChmod(file2, MODE); copied_count++;}
 
-				ret=size;
+				ret = size;
 			}
 			sys_memory_free(sysmem);
 		}
@@ -272,34 +284,33 @@ next_part:
 }
 
 #ifdef COPY_PS3
-static int folder_copy(char *path1, char *path2)
+static int folder_copy(const char *path1, const char *path2)
 {
-	copy_aborted = false;
-
 	cellFsChmod(path1, DMODE);
-	cellFsMkdir((char*)path2, DMODE);
+	cellFsMkdir(path2, DMODE);
 
 	int fd;
 
+	copy_aborted = false;
+
 	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir;
+		CellFsDirent dir; u64 read_e;
+
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
-		u64 read;
 
-		read = sizeof(CellFsDirent);
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || copy_aborted) break;
-			if(dir.d_name[0]=='.' && (dir.d_name[1]=='.' || dir.d_name[1]==0)) continue;
+			if(copy_aborted) break;
+			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
 
 			sprintf(source, "%s/%s", path1, dir.d_name);
 			sprintf(target, "%s/%s", path2, dir.d_name);
 
 			if(isDir(source))
 			{
-				if(!strcmp(source, "/dev_bdvd/PS3_UPDATE")) continue;
+				if(IS(source, "/dev_bdvd/PS3_UPDATE")) continue;
 				folder_copy(source, target);
 			}
 			else
@@ -319,22 +330,23 @@ static int folder_copy(char *path1, char *path2)
 #ifndef LITE_EDITION
 static int del(const char *path, bool recursive)
 {
-	if(!isDir(path)) {return cellFsUnlink(path);}
+	if(!isDir(path)) return cellFsUnlink(path);
+
 	if(strlen(path) < 11 || islike(path, "/dev_bdvd") || islike(path, "/dev_flash") || islike(path, "/dev_blind")) return FAILED;
 
 	int fd;
-	u64 read;
-	CellFsDirent dir;
-	char entry[MAX_PATH_LEN];
 
 	copy_aborted = false;
 
 	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
-		read = sizeof(CellFsDirent);
-		while(!cellFsReaddir(fd, &dir, &read))
+		CellFsDirent dir; u64 read_e;
+
+		char entry[MAX_PATH_LEN];
+
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || copy_aborted) break;
+			if(copy_aborted) break;
 			if(dir.d_name[0]=='.' && (dir.d_name[1]=='.' || dir.d_name[1]==0)) continue;
 
 			sprintf(entry, "%s/%s", path, dir.d_name);
@@ -357,38 +369,56 @@ static int del(const char *path, bool recursive)
 }
 #endif
 
-static void waitfor(char *path, uint8_t timeout)
+int waitfor(const char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
-	for(uint8_t n=0; n < (timeout*2); n++)
+	for(uint8_t n = 0; n < (timeout*5); n++)
 	{
-		if(path[0]!=NULL && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) break;
-		sys_timer_usleep(500000); if(!working) break;
+		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return 0;
+		sys_timer_usleep(200000); if(!working) break;
 	}
+	return FAILED;
 }
 
-static void enable_dev_blind(char *msg)
+static void enable_dev_blind(const char *msg)
 {
 	if(!isDir("/dev_blind"))
 		{system_call_8(SC_FS_MOUNT, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
 
 	if(!msg) return;
 
-	show_msg((char*) msg);
+	show_msg((char*)msg);
 	sys_timer_sleep(2);
 }
 
-static void unlink_file(const char *drive, const char *path, const char *file, char *buffer)
+static void disable_dev_blind(void)
 {
-	sprintf(buffer, "%s/%s%s", drive, path, file); cellFsUnlink(buffer);
+	system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);
+}
+
+static void unlink_file(const char *drive, const char *path, const char *file)
+{
+	char filename[64];
+	sprintf(filename, "%s/%s%s", drive, path, file); cellFsUnlink(filename);
 }
 
 #if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
-static bool do_custom_combo(const char *combo_file)
+static bool do_custom_combo(const char *filename)
 {
+ #if defined(WM_CUSTOM_COMBO)
+	char combo_file[MAX_PATH_LEN];
+
+	if(*filename == '/')
+		sprintf(combo_file, "%s", filename);
+	else
+		sprintf(combo_file, "%s%s", WM_CUSTOM_COMBO, filename); // use default path
+ #else
+	const char *combo_file = filename;
+ #endif
+
 	if(file_exists(combo_file))
 	{
-		file_copy((char*)combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
+		file_copy(combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
 	}
 	return false;
 }
@@ -396,25 +426,24 @@ static bool do_custom_combo(const char *combo_file)
 
 static void delete_history(bool delete_folders)
 {
-	int fd; char path[128];
+	int fd; char path[64];
 
 	if(cellFsOpendir("/dev_hdd0/home", &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read_e;
 
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read) break;
-			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat", path);
-			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP", path);
-			unlink_file("/dev_hdd0/home", dir.d_name, "/community/MI.TMP", path);
-			unlink_file("/dev_hdd0/home", dir.d_name, "/community/PTL.TMP", path);
+			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat");
+			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP");
+			unlink_file("/dev_hdd0/home", dir.d_name, "/community/MI.TMP");
+			unlink_file("/dev_hdd0/home", dir.d_name, "/community/PTL.TMP");
 		}
 		cellFsClosedir(fd);
 	}
 
-	unlink_file("/dev_hdd0", "vsh/pushlist/", "game.dat", path);
-	unlink_file("/dev_hdd0", "vsh/pushlist/", "patch.dat", path);
+	unlink_file("/dev_hdd0", "vsh/pushlist/", "game.dat");
+	unlink_file("/dev_hdd0", "vsh/pushlist/", "patch.dat");
 
 	if(!delete_folders) return;
 
@@ -427,28 +456,28 @@ static void delete_history(bool delete_folders)
 }
 
 #ifdef COPY_PS3
-static void import_edats(char *path1, char *path2)
+static void import_edats(const char *path1, const char *path2)
 {
-	int fd; bool from_usb;
-	u64 read;
-	CellFsDirent dir;
+	cellFsMkdir(path2, DMODE);
+
 	struct CellFsStat buf;
-
-	char source[MAX_PATH_LEN];
-	char target[MAX_PATH_LEN];
-
-	cellFsMkdir((char*)path2, DMODE);
 	if(cellFsStat(path2, &buf) != CELL_FS_SUCCEEDED) return;
+
+	int fd; bool from_usb;
 
 	copy_aborted = false;
 	from_usb = islike(path1, "/dev_usb");
 
 	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
-		read = sizeof(CellFsDirent);
-		while(!cellFsReaddir(fd, &dir, &read))
+		CellFsDirent dir; u64 read_e;
+
+		char source[MAX_PATH_LEN];
+		char target[MAX_PATH_LEN];
+
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || copy_aborted) break;
+			if(copy_aborted) break;
 			if(strstr(dir.d_name, ".edat")==NULL || !extcmp(dir.d_name, ".bak", 4)) continue;
 
 			sprintf(source, "%s/%s", path1, dir.d_name);
@@ -456,6 +485,7 @@ static void import_edats(char *path1, char *path2)
 
 			if(cellFsStat(target, &buf) != CELL_FS_SUCCEEDED)
 				file_copy(source, target, COPY_WHOLE_FILE);
+
 			if(from_usb && cellFsStat(target, &buf) == CELL_FS_SUCCEEDED)
 				{sprintf(target, "%s.bak", source); cellFsRename(source, target);}
 		}

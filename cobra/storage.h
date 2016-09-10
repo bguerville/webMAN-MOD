@@ -75,6 +75,7 @@ typedef struct
 
 int sys_storage_get_device_info(uint64_t device_id, sys_device_info_t *device_info);
 
+#ifndef _COBRA_C
 static int sys_storage_open(uint64_t device_id, uint64_t unk, sys_device_handle_t *device_handle, uint64_t unk2)
 {
 	system_call_4(SYS_STORAGE_OPEN, device_id, unk, (uint64_t)(uint32_t)device_handle, unk2);
@@ -86,6 +87,7 @@ static int sys_storage_close(sys_device_handle_t device_handle)
 	system_call_1(SYS_STORAGE_CLOSE, device_handle);
 	return (int)p1;
 }
+#endif
 
 int sys_storage_read(sys_device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 
@@ -106,6 +108,7 @@ typedef struct
 	char firstfile_path[MAX_PATH];
 } __attribute__((packed)) sys_emu_state_t;
 
+static int sys_storage_ext_get_disc_type(unsigned int *real_disctype, unsigned int *effective_disctype, unsigned int *fake_disctype) __attribute__((unused));
 static int sys_storage_ext_get_disc_type(unsigned int *real_disctype, unsigned int *effective_disctype, unsigned int *fake_disctype)
 {
 	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_GET_DISC_TYPE, (uint64_t)(uint32_t)real_disctype, (uint64_t)(uint32_t)effective_disctype, (uint64_t)(uint32_t)fake_disctype);
@@ -118,6 +121,7 @@ static int sys_storage_ext_get_disc_type(unsigned int *real_disctype, unsigned i
 	return (int)p1;
 } */
 
+static int sys_storage_ext_fake_storage_event(uint64_t event, uint64_t param, uint64_t device) __attribute__((unused));
 static int sys_storage_ext_fake_storage_event(uint64_t event, uint64_t param, uint64_t device)
 {
 	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_FAKE_STORAGE_EVENT, event, param, device);
@@ -160,6 +164,7 @@ static int sys_storage_ext_fake_storage_event(uint64_t event, uint64_t param, ui
 	return (int)p1;
 } */
 
+static int sys_storage_ext_umount_discfile(void) __attribute__((unused));
 static int sys_storage_ext_umount_discfile(void)
 {
 	system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_UMOUNT_DISCFILE);
@@ -205,7 +210,6 @@ int cellFsUtilUmount(const char *mount_point, uint64_t unk, int force);
 int cellFsUtilGetSpaceInfo(const char *mount_point, uint64_t *total_size, uint64_t *free_size);
 
 static uint64_t get_device(char *name) __attribute__((unused));
-
 static uint64_t get_device(char *name)
 {
 	if (strcmp(name, "CELL_FS_IOS:ATA_HDD") == 0)
@@ -248,10 +252,7 @@ static uint64_t get_device(char *name)
 		if (num > 127)
 			return 0;
 
-		if (num < 6)
-			return USB_MASS_STORAGE_1(num);
-
-		return USB_MASS_STORAGE_2(num);
+		return (num < 6) ? USB_MASS_STORAGE_1(num) : USB_MASS_STORAGE_2(num);
 	}
 
 	if (strcmp(name, "CELL_FS_IOS:BUILTIN_FLSH1") == 0)
@@ -281,13 +282,12 @@ static uint64_t get_device(char *name)
 	return 0;
 }
 
-static int sys_map_path(char *oldpath, char *newpath)
+static int sys_map_path(const char *oldpath, const char *newpath)
 {
 #if 0
 	system_call_2(35, (uint64_t)(uint32_t)oldpath, (uint64_t)(uint32_t)newpath);
 #else
-	char *paths[1]={NULL}; char *new_paths[1]={NULL};
-	paths[0]=oldpath;new_paths[0]=newpath;
+	char *paths[1] = { (char*)oldpath }, *new_paths[1] = { (char*)newpath };
 	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MAP_PATHS, (uint64_t)(uint32_t)paths, (uint64_t)(uint32_t)new_paths, 1);
 #endif
 	return (int)p1;

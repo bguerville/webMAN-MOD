@@ -1,5 +1,3 @@
-static char* get_game_info(void);
-
 //int (*_cellGcmIoOffsetToAddress)(uint32_t, void**) = NULL;
 int (*vshtask_notify)(int, const char *) = NULL;
 int (*View_Find)(const char *) = NULL;
@@ -54,23 +52,23 @@ static void show_msg(char* msg)
 	if(!vshtask_notify)
 		vshtask_notify = getNIDfunc("vshtask", 0xA02D46E7, 0);
 
-	if(strlen(msg) > 200) msg[200] = NULL;
+	if(strlen(msg) > 200) msg[200] = NULL; // truncate on-screen message
 
 	if(vshtask_notify)
 		vshtask_notify(0, msg);
 }
 
-static char* get_game_info(void)
+static int get_game_info(void)
 {
 	int h = View_Find("game_plugin");
 
 	if(h)
 	{
-		game_interface = (game_plugin_interface *)plugin_GetInterface(h,1);
+		game_interface = (game_plugin_interface *)plugin_GetInterface(h, 1);
 		game_interface->gameInfo(_game_info);
 	}
 
-	return (char*)h;
+	return h;
 }
 
 #ifndef LITE_EDITION
@@ -78,7 +76,7 @@ static void enable_ingame_screenshot(void)
 {
 	vshmain_is_ss_enabled = getNIDfunc("vshmain", 0x981D7E9F, 0); //is screenshot enabled?
 
-	if(vshmain_is_ss_enabled()==0)
+	if(vshmain_is_ss_enabled() == 0)
 	{
 		set_SSHT_ = (uint32_t*)&opd;
 		memcpy(set_SSHT_, vshmain_is_ss_enabled, 8);
@@ -94,9 +92,9 @@ static void enable_ingame_screenshot(void)
 static void launch_disc(char *category, char *seg_name)
 {
 	u8 n;
-	for(n=0; n<15; n++) {if(View_Find("explore_plugin")==0) sys_timer_sleep(2); else break;}
+	for(n = 0; n < 15; n++) {if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
-	if(!strcmp(seg_name, "seg_device")) waitfor((char*)"/dev_bdvd", 10); if(n) sys_timer_sleep(3);
+	if(IS(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
 
 	int view = View_Find("explore_plugin");
 
@@ -104,16 +102,16 @@ static void launch_disc(char *category, char *seg_name)
 	{
 		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
-		// default segment
-		if(!seg_name[0]) sprintf(seg_name, "seg_device");
-
 		// default category
 		if(!category[0]) sprintf(category, "game");
 
-		if(strcmp(seg_name, "seg_device") || isDir("/dev_bdvd"))
+		// default segment
+		if(!seg_name[0]) sprintf(seg_name, "seg_device");
+
+		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{
 			// use segment for media type
-			if(!strcmp(category, "game") && !strcmp(seg_name, "seg_device"))
+			if(IS(category, "game") && IS(seg_name, "seg_device"))
 			{
 				if(isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")) ; else
 				if(isDir("/dev_bdvd/BDMV") )    {sprintf(category, "video"); sprintf(seg_name, "seg_bdmav_device");} else
@@ -123,16 +121,16 @@ static void launch_disc(char *category, char *seg_name)
 			}
 
 			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
-			explore_interface->DoUnk6("close_all_list",0,0);
+			explore_interface->ExecXMBcommand("close_all_list",0,0);
 			sys_timer_usleep(200000);
-			{sprintf(explore_command, "focus_category %s", category); explore_interface->DoUnk6((char*)explore_command,0,0);}
+			{sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command,0,0);}
 			sys_timer_usleep(500000);
-			explore_interface->DoUnk6("close_all_list",0,0);
+			explore_interface->ExecXMBcommand("close_all_list",0,0);
 			sys_timer_usleep(200000);
 			sprintf(explore_command, "focus_segment_index %s", seg_name);
-			explore_interface->DoUnk6((char*)explore_command,0,0);
+			explore_interface->ExecXMBcommand((char*)explore_command,0,0);
 			sys_timer_usleep(500000);
-			explore_interface->DoUnk6("exec_push",0,0);
+			explore_interface->ExecXMBcommand("exec_push",0,0);
 		}
 		else {BEEP3}
 	}

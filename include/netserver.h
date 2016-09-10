@@ -108,7 +108,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 
 			/// detect sector size ///
 
-			if(result.file_size > _64KB_)
+			if((result.file_size > _64KB_) && (result.file_size <= 0x35000000UL))
 			{
 				clients[index].CD_SECTOR_SIZE_2352 = detect_cd_sector_size(fd);
 			}
@@ -155,7 +155,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 		return FAILED;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *cmd)
@@ -223,7 +223,7 @@ static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *c
 	}
 
 	/// exit ///
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_cd_2048_critical_cmd(u8 index, netiso_read_cd_2048_critical_cmd *cmd)
@@ -262,7 +262,7 @@ static int process_read_cd_2048_critical_cmd(u8 index, netiso_read_cd_2048_criti
 		///////////////
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_file_cmd(u8 index, netiso_read_file_cmd *cmd)
@@ -283,7 +283,7 @@ static int process_read_file_cmd(u8 index, netiso_read_file_cmd *cmd)
 	sys_addr_t sysmem = 0; size_t buffer_size = 0;
 
 	for(uint8_t n = MAX_PAGES; n > 0; n--)
-		if(remaining >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0) {buffer_size = n * _64KB_; break;}
+		if(remaining >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; break;}
 
 	char *buffer = (char*)sysmem;
 
@@ -325,7 +325,7 @@ send_result_read_file:
 	/// free memory ///
 
 	if(sysmem) sys_memory_free(sysmem);
-	return 0;
+	return CELL_OK;
 }
 
 static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
@@ -407,7 +407,7 @@ static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
 		return FAILED;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_open_dir_cmd(u8 index, netiso_open_dir_cmd *cmd)
@@ -460,7 +460,7 @@ static int process_open_dir_cmd(u8 index, netiso_open_dir_cmd *cmd)
 		return FAILED;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
@@ -475,7 +475,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 	sys_addr_t sysmem = 0;
 
 	for(uint64_t n = MAX_PAGES; n > 0; n--)
-		if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0) {max_entries = (n * _64KB_) / sizeof(netiso_read_dir_result_data); break;}
+		if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {max_entries = (n * _64KB_) / sizeof(netiso_read_dir_result_data); break;}
 
 	(void) cmd;
 	netiso_read_dir_result result;
@@ -492,7 +492,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 	filter = !(dirpath_len > 1 && clients[index].dirpath[dirpath_len - 1] == '/'); // unhide filtered files if path ends with /
 
 	/// do not scan GAMES & GAMEZ ///
-	if(filter && (!strcmp(clients[index].dirpath, "/GAMES") || !strcmp(clients[index].dirpath, "/GAMEZ"))) goto send_result_read_dir_cmd;
+	if(filter && (IS(clients[index].dirpath, "/GAMES") || IS(clients[index].dirpath, "/GAMEZ"))) goto send_result_read_dir_cmd;
 
 	struct CellFsStat st;
 	CellFsDirent entry;
@@ -516,11 +516,11 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 
 		dirpath_len = strlen(dirpath);
 
-		while(cellFsReaddir(dir, &entry, &read_e) == 0 && read_e > 0)
+		while((cellFsReaddir(dir, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(entry.d_name[0] == '.' && (entry.d_name[1] == '.' || entry.d_name[1] == 0)) continue;
 
-			d_name_len = strlen(entry.d_name);
+			d_name_len = entry.d_namlen;
 			if(d_name_len == 0) continue;
 
 			if(dirpath_len + d_name_len < MAX_PATH_LEN - 1)
@@ -539,7 +539,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 				if((st.st_mode & S_IFDIR) == S_IFDIR)
 				{
 						/// avoid list duplicated folders (common only) ///
-						for(d = 0; d < 11; d++) {if(!strcmp(entry.d_name, paths[d])) break;}
+						for(d = 0; d < 11; d++) {if(IS(entry.d_name, paths[d])) break;}
 						if(d < 11) {if(flags & (1<<d)) continue; flags |= (1<<d);}
 
 						dir_entries[count].file_size = (0);
@@ -585,7 +585,7 @@ send_result_read_dir_cmd:
 	/// free memory ///
 
 	if(sysmem) sys_memory_free(sysmem);
-	return 0;
+	return CELL_OK;
 }
 
 static void handleclient_net(uint64_t arg)
@@ -643,7 +643,7 @@ static void handleclient_net(uint64_t arg)
 				break;
 
 				default:
-					ret = -1; // Unknown command received
+					ret = FAILED; // Unknown command received
 			}
 
 			if(ret != 0) break;
@@ -665,7 +665,7 @@ static void handleclient_net(uint64_t arg)
 
 static void netsvrd_thread(uint64_t arg)
 {
-	int list_s=FAILED;
+	int list_s = FAILED;
 	if(webman_config->netp == 0) webman_config->netp = NETPORT;
 
 relisten:

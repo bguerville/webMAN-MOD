@@ -162,3 +162,10 @@ rd objs>nul
 copy .\flags\flags_full.h .\flags.h >nul
 ren webftp_server_cobra.sprx webftp_server.sprx
 
+cls
+dir *.sprx
+
+echo press any key to copy and build pkg
+pause>nul
+
+_Make_pkg.bat
