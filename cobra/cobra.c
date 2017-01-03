@@ -22,6 +22,7 @@
 #define TYPE_HOST2DEV (USB_REQTYPE_DIR_TO_DEVICE|USB_REQTYPE_TYPE_VENDOR)
 #define TYPE_DEV2HOST (USB_REQTYPE_DIR_TO_HOST|USB_REQTYPE_TYPE_VENDOR)
 
+#define FAILED		-1
 
 #define SWAP32(x) ((((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff))
 
@@ -85,7 +86,7 @@ enum
 	// Set Hash size
 	CMD_SPI_FLASH_SET_HASH_SIZE
 };
-
+/*
 typedef struct
 {
 	char key[64];
@@ -102,9 +103,12 @@ typedef struct
 	uint8_t pad[6];
 	ScsiTrackDescriptor tracks[1];
 } __attribute__((packed)) netiso_args;
+*/
 
+size_t read_file(const char *file, char *data, size_t size, int32_t offset);
+int save_file(const char *file, const char *mem, int64_t size);
 
-int file_copy(char *file1, char *file2, uint64_t maxbytes);
+int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 int waitfor(const char *path, uint8_t timeout);
 
 // storage.h inline functions merged
@@ -150,11 +154,6 @@ static int sys_storage_ext_mount_ps2_discfile(unsigned int filescount, char *fil
 	return (int)p1;
 }
 
-static int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
-{
-	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MAP_PATHS, (uint64_t)(uint32_t)paths, (uint64_t)(uint32_t)new_paths, num);
-	return (int)p1;
-}
 /*
 static int sys_storage_ext_mount_encrypted_image(char *image, char *mount_point, char *filesystem, uint64_t nonce)
 {
@@ -341,12 +340,12 @@ static KeyValue emu_by_title_name[N_TITLE_NAMES] =
 	{ "Warhammer 40,000: Squad Command", EMU_400 },
 };
 
-
 static uint8_t lambda_md5[16] =
 {
 	0xE1, 0x99, 0xCA, 0x7D, 0x48, 0x3B, 0xC0, 0x7B, 0x4D, 0xC6, 0xE7, 0x4A, 0xE5, 0x53, 0x76, 0xCE
 };
 */
+
 static int translate_type(unsigned int type)
 {
 	if (type == 0)
@@ -405,6 +404,20 @@ static void build_blank_iso(const char *title_id)
 	if(sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) return;
 	uint8_t *buf = (uint8_t*)sysmem;
 
+/*
+	// build task.dat from external template file
+	read_file("/dev_hdd0/tmp/task.dat", (char*)buf, _128KB_, 0);
+
+	memcpy(buf + 0x810, title_id, 4);
+	buf[0x814] = '-';
+	memcpy(buf + 0x815, title_id+4, 5);
+
+	save_file("/dev_hdd0/vsh/task.dat", (char*)buf, _128KB_);
+
+	if(sysmem) sys_memory_free(sysmem);
+	return;
+*/
+
 	memset(buf, 0, _128KB_);
 
 	buf[3] = 2;
@@ -412,14 +425,13 @@ static void build_blank_iso(const char *title_id)
 	strcpy((char *)buf + 0x800, "PlayStation3");
 	memcpy(buf + 0x810, title_id, 4);
 	buf[0x814] = '-';
-	memcpy(buf + 0x815, title_id+4, 5);
+	memcpy(buf + 0x815, title_id + 4, 5);
 	memset(buf + 0x81A, ' ', 0x16);
 	buf[0x8000] = 1;
 	strcpy((char *)buf + 0x8001, "CD001");
 	buf[0x8006] = 1;
-	memset(buf + 0x8008, ' ', 0x20);
+	memset(buf + 0x8008, ' ', 0x40);
 	memcpy(buf + 0x8028, "PS3VOLUME", 9);
-	memset(buf + 0x8031, ' ', 0x17);
 	buf[0x8050] = buf[0x8057] = 0x40;
 	buf[0x8078] = buf[0x807B] = buf[0x807C] = buf[0x807F] = 1;
 	buf[0x8081] = buf[0x8082] = 8;
@@ -438,10 +450,11 @@ static void build_blank_iso(const char *title_id)
 	buf[0x80B8] = buf[0x80BB] = buf[0x80BC] = 1;
 	memcpy(buf + 0x80be, "PS3VOLUME", 9);
 	memset(buf + 0x80C7, ' ', 0x266);
-	strcpy((char *)buf + 0x832d, "2013111105051300");
-	memset(buf + 0x833e, '0', 0x10);
-	memset(buf + 0x834f, '0', 0x10);
-	memset(buf + 0x8360, '0', 0x10);
+	strcpy((char *)buf + 0x832D, "20131111050513");
+	memset(buf + 0x833B, '0', 0x35);
+	buf[0x833D] = 0;
+	buf[0x834E] = 0;
+	buf[0x835F] = 0;
 	buf[0x8371] = 1;
 	buf[0x8800] = 2;
 	strcpy((char *)buf + 0x8801, "CD001");
@@ -455,8 +468,9 @@ static void build_blank_iso(const char *title_id)
 	buf[0x8835] = 'U';
 	buf[0x8837] = 'M';
 	buf[0x8839] = 'E';
-	buf[0x8850] = buf[0x8857] = 0x40;
-	strcpy((char *)buf + 0x8858, "%/@");
+	buf[0x8850] = buf[0x8857] = buf[0x885A] = 0x40;
+	buf[0x8858] = '%';
+	buf[0x8859] = '/';
 	buf[0x8878] = buf[0x887B] = buf[0x887C] = buf[0x887F] = 1;
 	buf[0x8881] = buf[0x8882] = 8;
 	buf[0x8884] = buf[0x888B] = 0xA;
@@ -473,10 +487,7 @@ static void build_blank_iso(const char *title_id)
 	buf[0x88B3] = buf[0x88B5] = 2;
 	buf[0x88B8] = buf[0x88BB] = buf[0x88BC] = 1;
 	memcpy(buf + 0x88BF, buf + 0x8829, 17); // 'P S 3 V O L U M E'
-	strcpy((char *)buf + 0x8B2D, "2013111105051300");
-	memset(buf + 0x8B3E, '0', 0x10);
-	memset(buf + 0x8B4F, '0', 0x10);
-	memset(buf + 0x8B60, '0', 0x10);
+	memcpy((char *)buf + 0x8B2D, (char *)buf + 0x832D, 0x43);
 	buf[0x8B71] = 1;
 	buf[0x9000] = 0xFF;
 	strcpy((char *)buf + 0x9001, "CD001");
@@ -533,10 +544,7 @@ static void build_blank_iso(const char *title_id)
 	buf[0xC83F] = buf[0xC841] = 2;
 	buf[0xC844] = buf[0xC847] = buf[0xC848] = buf[0xC849] = 1;
 
-	int fd = 0;
-	cellFsOpen("/dev_hdd0/vsh/task.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, NULL, 0);
-	cellFsWrite(fd, buf, _128KB_, NULL);
-	cellFsClose(fd);
+	save_file("/dev_hdd0/vsh/task.dat", (char*)buf, _128KB_);
 
 	if(sysmem) sys_memory_free(sysmem);
 	return;
@@ -591,7 +599,7 @@ static int copy_file(char *src, char *dst)
 
 	//DPRINTF("Copy file returning: %x\n", ret);
 
-	//free(buf);
+	free(buf);
 	return ret;
 }
 */
@@ -653,7 +661,7 @@ static char *trim(char *str)
 	}
 
 	strcpy(str, (char *)p);
-	//free(temp);
+	free(temp);
 	return str;
 }
 
@@ -694,7 +702,7 @@ static int parse_param_sfo(char *file, const char *field, char *title_name)
 
 			if (!strcmp((char *) &mem[str], field)) {
 				strncpy(title_name, (char *) &mem[pos], 63);
-				//free(mem);
+				free(mem);
 				return 0;
 			}
 			while (mem[str])
@@ -948,7 +956,7 @@ int cobra_mount_ps2_disc_image(char *files[], int num, TrackDef *tracks, unsigne
 int cobra_umount_disc_image(void)
 {
 	int ret = sys_storage_ext_umount_discfile();
-	if (ret == -1)
+	if (ret == FAILED)
 		ret = ENODEV;
 
 	return ret;
@@ -1025,7 +1033,7 @@ int cobra_get_cd_td(uint32_t handle, TrackDef *td, unsigned int max_tracks, unsi
 	ret = sys_storage_send_device_command(handle, STORAGE_COMMAND_NATIVE, scsi_cmd, sizeof(scsi_cmd), response, cmd->alloc_length);
 	if (ret != 0)
 	{
-		//free(response);
+		free(response);
 		return ret;
 	}
 
@@ -1072,7 +1080,7 @@ int cobra_get_cd_td(uint32_t handle, TrackDef *td, unsigned int max_tracks, unsi
 
 	if (ret != 0)
 	{
-		//free(response);
+		free(response);
 		return ret;
 	}
 
@@ -1091,7 +1099,7 @@ int cobra_get_cd_td(uint32_t handle, TrackDef *td, unsigned int max_tracks, unsi
 	if (i == cd_total_tracks)
 		return ENOTSUP;
 
-	//free(response);
+	free(response);
 
 	if (cd_num_tracks > max_tracks)
 		*num_tracks = max_tracks;
@@ -1482,7 +1490,7 @@ int cobra_map_game(const char *path, const char *title_id, int *special_mode)
 	if (ret != 0) return ret;
 
 	sys_map_path("//dev_bdvd", path);
-	sys_map_path("/app_home", special_mode ? path : NULL);
+	sys_map_path("/app_home", path);
 
 	unsigned int real_disctype;
 
@@ -1509,10 +1517,163 @@ int cobra_map_game(const char *path, const char *title_id, int *special_mode)
 
 	return 0;
 }
-
+/*
 int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num)
 {
 	return sys_map_paths(paths, new_paths, num);
+}
+*/
+int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
+{
+	int ret;
+
+	if (!path || !icon_save_path)
+		return EINVAL;
+
+	CellFsStat stat;
+
+	if (cellFsStat(PSPL_ICON, &stat) != CELL_FS_SUCCEEDED)
+	{
+		return EABORT;
+	}
+
+	char sector[2048];
+	read_file(path, sector, sizeof(sector), 0x8000);
+
+	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) return EIO;
+
+	unsigned int real_disctype, effective_disctype, iso_disctype;
+
+	char title_id[11];
+	memcpy(title_id, sector + 0x373, 10); title_id[10] = 0;
+
+	char *root;
+
+	root = umd_root;
+
+	if (!root)
+	{
+		cobra_get_disc_type(&real_disctype, &effective_disctype, &iso_disctype);
+
+		if (iso_disctype != DISC_TYPE_NONE)
+			return EBUSY;
+
+		if (effective_disctype != DISC_TYPE_NONE)
+		{
+			cobra_send_fake_disc_eject_event();
+		}
+
+		char *files[1];
+
+		files[0] = path;
+		ret = sys_storage_ext_mount_dvd_discfile(1, files);
+		if (ret != 0)
+		{
+			if (real_disctype != DISC_TYPE_NONE)
+				cobra_send_fake_disc_insert_event();
+
+			return ret;
+		}
+
+		cobra_send_fake_disc_insert_event();
+
+		// Wait 3 seconds for automounter to mount iso
+		if (waitfor("/dev_bdvd", 3) == FAILED)
+		{
+			cobra_send_fake_disc_eject_event();
+			sys_storage_ext_umount_discfile();
+
+			if (real_disctype != DISC_TYPE_NONE)
+				cobra_send_fake_disc_insert_event();
+
+			return EIO;
+		}
+
+		root = (char*)"/dev_bdvd";
+	}
+	else
+	{
+		real_disctype = DISC_TYPE_NONE;
+	}
+
+	int prometheus = 0;
+	int decrypt_patch = 1;
+
+	uint32_t tag = 0;
+	uint8_t *keys = NULL;
+	uint8_t code = 0;
+
+	char umd_file[256];
+
+	snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/ICON0.PNG", root);
+
+	if(file_copy(umd_file, icon_save_path, 0) >= CELL_FS_SUCCEEDED)
+	{
+		sys_map_path((char *)PSPL_ICON, icon_save_path);
+		snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/EBOOT.OLD", root);
+
+		if (cellFsStat(umd_file, &stat) != CELL_FS_SUCCEEDED)
+		{
+			snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/EBOOT.BIN", root);
+		}
+		else
+		{
+			prometheus = 1;
+		}
+
+		uint32_t header[0xD4/4];
+		if (read_file(umd_file, (char*)&header, sizeof(header), 0) == sizeof(header))
+		{
+			if (header[0] == 0x7E505350) /* "~PSP" */
+			{
+				unsigned int i;
+
+				decrypt_patch = 0;
+				for (i = 0; i < NUM_SUPPORTED_TAGS; i++)
+				{
+					if (emulator_supported_tags355[i] == header[0xD0/4])
+						break;
+				}
+
+				if (i == NUM_SUPPORTED_TAGS)
+				{
+					for (i = 0; i < NUM_EXTRA_KEYS; i++)
+					{
+						if (psp_extra_keys[i].tag == header[0xD0/4])
+						{
+							tag = psp_extra_keys[i].tag;
+							code = psp_extra_keys[i].code;
+							keys = psp_extra_keys[i].keys;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		ret = 0;
+	}
+	else
+	{
+		ret = EIO;
+	}
+
+	if (!umd_root)
+	{
+		cobra_send_fake_disc_eject_event();
+		sys_storage_ext_umount_discfile();
+
+		if (real_disctype != DISC_TYPE_NONE)
+			cobra_send_fake_disc_insert_event();
+	}
+
+	if (ret == 0)
+	{
+		sys_psp_set_umdfile(path, title_id, prometheus);
+		sys_psp_set_decrypt_options(decrypt_patch, tag, keys, code, 0, NULL, 0);
+	}
+
+	return ret;
 }
 
 /*
@@ -1529,7 +1690,6 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 	uint32_t tag = 0;
 	uint8_t *keys = NULL;
 	uint8_t code = 0;
-	uint8_t sector[2048];
 
 	if (!path || !icon_save_path)
 		return EINVAL;
@@ -1539,25 +1699,19 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		return EABORT;
 	}
 
-	uint64_t pos, nread;
-	int fd;
+	int fd; uint8_t sector[2048]; memset(sector, 0, 2048);
 
-	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED)
-		return EIO;
-
-	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) != CELL_FS_SUCCEEDED)
+	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
+		uint64_t pos;
+
+		if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) == CELL_FS_SUCCEEDED)
+		{
+			cellFsRead(fd, sector, sizeof(sector), NULL);
+		}
 		cellFsClose(fd);
-		return EIO;
 	}
 
-	if (cellFsRead(fd, sector, sizeof(sector), &nread) != CELL_FS_SUCCEEDED)
-	{
-		cellFsClose(fd);
-		return EIO;
-	}
-
-	cellFsClose(fd);
 	if (sector[0] != 1 || memcmp(sector+1, "CD001", 5) != CELL_FS_SUCCEEDED)
 		return EIO;
 
@@ -1773,10 +1927,10 @@ static int check_lambda(void)
 		}
 	}
 
-	//free(buf);
+	free(buf);
 	return ret;
 }
-*/
+
 int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_t options)
 {
 	int ret;
@@ -1790,36 +1944,27 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 	{
 		return EABORT;
 	}
-/*
+
 	if (cellFsStat(PSPL_LAMBDA, &stat) != CELL_FS_SUCCEEDED)
 	{
 		return ESYSVER;
 	}
-*/
-	int fd;
 
-	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED)
-		return EIO;
 
-	uint64_t pos;
+	int fd; uint8_t sector[2048]; memset(sector, 0, 2048);
 
-	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) != CELL_FS_SUCCEEDED)
+	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
+		uint64_t pos;
+
+		if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) == CELL_FS_SUCCEEDED)
+		{
+			cellFsRead(fd, sector, sizeof(sector), NULL);
+		}
 		cellFsClose(fd);
-		return EIO;
 	}
 
-	uint8_t sector[2048];
-
-	if (cellFsRead(fd, sector, sizeof(sector), NULL) != CELL_FS_SUCCEEDED)
-	{
-		cellFsClose(fd);
-		return EIO;
-	}
-
-	cellFsClose(fd);
-	if (sector[0] != 1 || memcmp(sector+1, "CD001", 5) != CELL_FS_SUCCEEDED)
-		return EIO;
+	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) return EIO;
 
 	unsigned int real_disctype, effective_disctype, iso_disctype;
 
@@ -1858,7 +2003,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 0.5 seconds for automounter to mount iso
-		if (waitfor("/dev_bdvd", 1) == -1)
+		if (waitfor("/dev_bdvd", 1) == FAILED)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();
@@ -1889,7 +2034,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/ICON0.PNG", root);
 
-	if(file_copy(umd_file, icon_save_path, 0) == CELL_FS_SUCCEEDED)
+	if(file_copy(umd_file, icon_save_path, 0) >= CELL_FS_SUCCEEDED)
 	{
 		int fd;
 
@@ -1913,7 +2058,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 			cellFsRead(fd, header, sizeof(header), &read);
 			if (read == sizeof(header))
 			{
-				if (header[0] == 0x7E505350) /* "~PSP" */
+				if (header[0] == 0x7E505350) // "~PSP"
 				{
 					unsigned int i;
 
@@ -1926,23 +2071,20 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 					if (i == NUM_SUPPORTED_TAGS)
 					{
-						unsigned int j;
-
 						//DPRINTF("Tag not supported natively.\n");
 
-						for (j = 0; j < NUM_EXTRA_KEYS; j++)
+						for (i = 0; i < NUM_EXTRA_KEYS; i++)
 						{
-							if (psp_extra_keys[j].tag == header[0xD0/4])
+							if (psp_extra_keys[i].tag == header[0xD0/4])
 							{
-								tag = psp_extra_keys[j].tag;
-								code = psp_extra_keys[j].code;
-								keys = psp_extra_keys[j].keys;
-								//DPRINTF("Tag %08X found\n", psp_extra_keys[j].tag);
+								tag = psp_extra_keys[i].tag;
+								code = psp_extra_keys[i].code;
+								keys = psp_extra_keys[i].keys;
+								//DPRINTF("Tag %08X found\n", psp_extra_keys[i].tag);
 								break;
 							}
 						}
-/*
-						if (j == NUM_EXTRA_KEYS)
+						if (i == NUM_EXTRA_KEYS)
 						{
 							//DPRINTF("No tag found. Game will crash.\n");
 						}
@@ -1951,14 +2093,12 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 					else
 					{
 						//DPRINTF("Tag supported natively.\n");
-*/
 					}
 				}
 			}
 			cellFsClose(fd);
 		}
 
-		/*
 		char title_name[256];
 
 		if (emu == EMU_AUTO)
@@ -1971,7 +2111,6 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 			emu = get_emu(title_id, title_name);
 		}
-		*/
 
 		ret = 0;
 	}
@@ -1991,7 +2130,6 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	if (ret == 0)
 	{
-/*
 		if (emu == EMU_400)
 		{
 			if (check_lambda() < 0)
@@ -2000,13 +2138,14 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 			sys_storage_ext_mount_encrypted_image((char*)PSPL_LAMBDA, (char*)"/dev_moo", (char*)"CELL_FS_FAT", PSPL_LAMBDA_NONCE);
 			sys_psp_change_emu_path("/dev_moo/pspemu");
 		}
-*/
+
 		sys_psp_set_umdfile(path, title_id, prometheus);
 		sys_psp_set_decrypt_options(decrypt_patch, tag, keys, code, 0, NULL, 0);
 	}
 
 	return ret;
 }
+*/
 
 int cobra_unset_psp_umd(void)
 {
@@ -2037,7 +2176,7 @@ int cobra_get_usb_device_name(char *mount_point, char *dev_name)
 	ret = cellFsUtilGetMountInfo(info, size, &size);
 	if (ret != 0)
 	{
-		//free(info);
+		free(info);
 		return ret;
 	}
 
@@ -2049,12 +2188,12 @@ int cobra_get_usb_device_name(char *mount_point, char *dev_name)
 
 	if (i == size)
 	{
-		//free(info);
+		free(info);
 		return -1;
 	}
 
 	device = get_device(info[i].block_dev);
-	//free(info);
+	free(info);
 
 	if (device == 0)
 	{
@@ -2262,4 +2401,3 @@ int cobra_unload_vsh_plugin(unsigned int slot)
 	system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN, slot);
 	return (int)p1;
 }
-

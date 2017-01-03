@@ -91,12 +91,14 @@ static void saveBMP(char *path, bool notify_bmp)
 		sprintf(path, "/dev_hdd0/screenshot_%02d_%02d_%02d_%02d_%02d_%02d.bmp", t.year, t.month, t.day, t.hour, t.minute, t.second);
 	}
 
+	filepath_check(path);
+
 	// create bmp file
 	int fd;
 	if(IS_INGAME || cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) != CELL_FS_SUCCEEDED) { BEEP3 ; return;}
 
 	// alloc buffers
-	sys_memory_container_t mc_app = (sys_memory_container_t)-1;
+	sys_memory_container_t mc_app = SYS_MEMORY_CONTAINER_NONE;
 	mc_app = vsh_memory_container_by_id(1);
 
 	const int32_t mem_size = 64 * 1024; // 64 KB (bmp data and frame buffer)

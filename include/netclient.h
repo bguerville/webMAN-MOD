@@ -1,6 +1,12 @@
 #ifndef LITE_EDITION
 #ifdef COBRA_ONLY
 
+#ifdef NET3NET4
+	const u8 netsrvs = 5;
+#else
+	const u8 netsrvs = 3;
+#endif
+
 typedef struct _netiso_args
 {
 	char server[0x40];
@@ -12,8 +18,8 @@ typedef struct _netiso_args
 	ScsiTrackDescriptor tracks[1];
 } __attribute__((packed)) netiso_args;
 
-static int g_socket = -1;
-static sys_event_queue_t command_queue_net = -1;
+static int g_socket = NONE;
+static sys_event_queue_t command_queue_net = NONE;
 
 #define MAX_RETRIES    3
 
@@ -21,7 +27,7 @@ static sys_event_queue_t command_queue_net = -1;
 #define PLAYSTATION      "PLAYSTATION "
 
 static u8 netiso_loaded = 0;
-static int netiso_svrid = -1;
+static int netiso_svrid = NONE;
 
 static int read_remote_file(int s, void *buf, uint64_t offset, uint32_t size, int *abort_connection)
 {
@@ -107,7 +113,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 		return FAILED;
 	}
 
-	if(res.file_size == -1)
+	if(res.file_size == NONE)
 	{
 		//DPRINTF("Remote file %s doesn't exist!\n", path);
 		return FAILED;
@@ -126,7 +132,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 			bytes_read = read_remote_file(s, (char*)chunk, 0, chunk_size, abort_connection);
 			if(bytes_read)
 			{
-				savefile(TEMP_NET_PSXISO, chunk, bytes_read);
+				save_file(TEMP_NET_PSXISO, chunk, bytes_read);
 
 				if(cellFsOpen(TEMP_NET_PSXISO, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
@@ -332,7 +338,7 @@ static int remote_stat(int s, const char *path, int *is_directory, int64_t *file
 	*abort_connection = 0;
 
 	*file_size = (res.file_size);
-	if(*file_size == -1)
+	if(*file_size == NONE)
 		return FAILED;
 
 	*is_directory = res.is_directory;
@@ -521,7 +527,7 @@ static void netiso_thread(uint64_t arg)
 	{
 		shutdown(g_socket, SHUT_RDWR);
 		socketclose(g_socket);
-		g_socket = -1;
+		g_socket = NONE;
 	}
 
 	sys_event_port_disconnect(result_port);
@@ -532,7 +538,7 @@ static void netiso_thread(uint64_t arg)
 
 	//DPRINTF("Exiting main thread!\n");
 	netiso_loaded = 0;
-	netiso_svrid = -1;
+	netiso_svrid = NONE;
 
 	sys_ppu_thread_exit(0);
 }
@@ -541,16 +547,16 @@ static void netiso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
 	netiso_loaded = 0;
-	netiso_svrid = -1;
+	netiso_svrid = NONE;
 
 	if(g_socket >= 0)
 	{
 		shutdown(g_socket, SHUT_RDWR);
 		socketclose(g_socket);
-		g_socket = -1;
+		g_socket = NONE;
 	}
 
-	if(command_queue_net != (sys_event_queue_t)-1)
+	if(command_queue_net != SYS_EVENT_QUEUE_NONE)
 	{
 		if(sys_event_queue_destroy(command_queue_net, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
 		{
@@ -558,7 +564,7 @@ static void netiso_stop_thread(uint64_t arg)
 		}
 	}
 
-	if(thread_id_net != (sys_ppu_thread_t)-1)
+	if(thread_id_net != SYS_PPU_THREAD_NONE)
 	{
 		sys_ppu_thread_join(thread_id_net, &exit_code);
 	}
@@ -566,45 +572,28 @@ static void netiso_stop_thread(uint64_t arg)
 	sys_ppu_thread_exit(0);
 }
 
+static bool is_netsrv_enabled(u8 server_id)
+{
+	return( (webman_config->netd[server_id] == 1) && (webman_config->neth[server_id][0] != NULL) && (webman_config->netp[server_id] > 0) && !islike(webman_config->neth[server_id], "127.") && !islike(webman_config->neth[server_id], "localhost"));
+}
+
 static int connect_to_remote_server(u8 server_id)
 {
 	int ns = FAILED;
 
-	if( (server_id == 0 && (webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0))
-	||	(server_id == 1 && (webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1))
-	||	(server_id == 2 && (webman_config->netd2 && webman_config->neth2[0] && webman_config->netp2))
-#ifdef NET3NET4
-	||	(server_id == 3 && (webman_config->netd3 && webman_config->neth3[0] && webman_config->netp3))
-	||	(server_id == 4 && (webman_config->netd4 && webman_config->neth4[0] && webman_config->netp4))
-#endif
-	  )
+	if( is_netsrv_enabled(server_id) )
 	{
 		// check duplicated connections
-		if(server_id == 1 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth1) && webman_config->netp0 == webman_config->netp1) return FAILED;
+		for(u8 n = 0; n < server_id; n++)
+			if((webman_config->netd[n] == 1) && IS(webman_config->neth[n], webman_config->neth[server_id]) && webman_config->netp[n] == webman_config->netp[server_id]) return FAILED;
 
-		if(server_id == 2 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth2) && webman_config->netp0 == webman_config->netp2) return FAILED;
-		if(server_id == 2 && webman_config->netd1 && IS(webman_config->neth1, webman_config->neth2) && webman_config->netp1 == webman_config->netp2) return FAILED;
-#ifdef NET3NET4
-		if(server_id == 3 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth3) && webman_config->netp0 == webman_config->netp3) return FAILED;
-		if(server_id == 3 && webman_config->netd1 && IS(webman_config->neth1, webman_config->neth3) && webman_config->netp1 == webman_config->netp3) return FAILED;
-		if(server_id == 3 && webman_config->netd2 && IS(webman_config->neth2, webman_config->neth3) && webman_config->netp2 == webman_config->netp3) return FAILED;
-
-		if(server_id == 4 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth4) && webman_config->netp0 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && webman_config->netd1 && IS(webman_config->neth1, webman_config->neth4) && webman_config->netp1 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && webman_config->netd2 && IS(webman_config->neth2, webman_config->neth4) && webman_config->netp2 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && webman_config->netd3 && IS(webman_config->neth3, webman_config->neth4) && webman_config->netp3 == webman_config->netp4) return FAILED;
-#endif
 		u8 retries = 0;
 
 	reconnect:
-		if(server_id == 0) ns = connect_to_server(webman_config->neth0, webman_config->netp0);
-		if(server_id == 1) ns = connect_to_server(webman_config->neth1, webman_config->netp1);
-		if(server_id == 2) ns = connect_to_server(webman_config->neth2, webman_config->netp2);
-#ifdef NET3NET4
-		if(server_id == 3) ns = connect_to_server(webman_config->neth3, webman_config->netp3);
-		if(server_id == 4) ns = connect_to_server(webman_config->neth4, webman_config->netp4);
-#endif
-		if(ns<0)
+
+		ns = connect_to_server_ex(webman_config->neth[server_id], webman_config->netp[server_id], true);
+
+		if(ns < 0)
 		{
 			if(retries < MAX_RETRIES)
 			{
@@ -613,12 +602,14 @@ static int connect_to_remote_server(u8 server_id)
 				goto reconnect;
 			}
 
-			// retry using IP of client (/net0 only) - update IP in neth0 if connection is successful
-			if(server_id == 0 && webman_config->netd0 && !IS(webman_config->allow_ip, webman_config->neth1) && !IS(webman_config->allow_ip, webman_config->neth2))
-			{
-				ns = connect_to_server(webman_config->allow_ip, webman_config->netp0);
-				if(ns >= 0) strcpy(webman_config->neth0, webman_config->allow_ip);
-			}
+			if(server_id > 0 || !webman_config->netd[0] || islike(webman_config->allow_ip, "127.") || IS(webman_config->allow_ip, "localhost")) return ns;
+
+			for(u8 n = 1; n < netsrvs; n++)
+				if(IS(webman_config->neth[n], webman_config->allow_ip)) return ns;
+
+			// retry using IP of client (/net0 only) - update IP in neth[0] if connection is successful
+			ns = connect_to_server_ex(webman_config->allow_ip, webman_config->netp[0], true);
+			if(ns >= 0) strcpy(webman_config->neth[0], webman_config->allow_ip);
 		}
 	}
 	return ns;
@@ -728,49 +719,55 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	if(file_exists(local_file)) return CELL_OK; // local file already exists
 
-	int abort_connection=0, is_directory=0, fdw = 0; int64_t file_size; u64 mtime, ctime, atime;
+	int64_t file_size = 0; int abort_connection = 0;
 
-	if(remote_stat(ns, remote_file, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0) return FAILED;
+	//
+	int is_directory = 0; u64 mtime, ctime, atime;
+	if(remote_stat(ns, remote_file, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) != CELL_OK || file_size <= 0) return FAILED;
+	//
 
-	if(file_size <= 0) return FAILED;
+	int ret = FAILED;
 
-	if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
+	file_size = open_remote_file(ns, remote_file, &abort_connection);
 
-	sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
-
-	if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+	if(file_size > 0)
 	{
-		char *chunk = (char*)sysmem;
+		sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
 
-		if(cellFsOpen(local_file, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
-			open_remote_file(ns, remote_file, &abort_connection);
+			char *chunk = (char*)sysmem; int fdw;
 
-			int bytes_read, boff = 0;
-			while(boff < file_size)
+			if(cellFsOpen(local_file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
-				if(copy_aborted) break;
+				if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
 
-				bytes_read = read_remote_file(ns, (char*)chunk, boff, chunk_size, &abort_connection);
-				if(bytes_read)
-					cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
+				if(chunk_size > (uint64_t)file_size) chunk_size = (uint64_t)file_size;
 
-				boff += bytes_read;
-				if((uint64_t)bytes_read < chunk_size || abort_connection) break;
+				int bytes_read, boff = 0;
+				while(boff < file_size)
+				{
+					if(copy_aborted) break;
+
+					bytes_read = read_remote_file(ns, (char*)chunk, boff, chunk_size, &abort_connection);
+					if(bytes_read)
+						cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
+
+					boff += bytes_read;
+					if(((uint64_t)bytes_read < chunk_size) || abort_connection) break;
+				}
+				cellFsClose(fdw);
+				cellFsChmod(local_file, MODE);
+
+				ret = CELL_OK;
 			}
-
-			open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
-			cellFsClose(fdw);
 			sys_memory_free(sysmem);
-
-			cellFsChmod(local_file, MODE);
-			return CELL_OK;
 		}
-
-		sys_memory_free(sysmem);
 	}
 
-	return FAILED;
+	open_remote_file(ns, "/CLOSEFILE", &abort_connection);
+
+	return ret;
 }
 #endif
 #endif //#ifndef LITE_EDITION

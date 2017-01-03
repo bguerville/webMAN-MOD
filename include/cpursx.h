@@ -49,6 +49,49 @@ static void get_net_info(char *net_type, char *ip)
 	netctl_main_9A528B81(ip_size, ip);
 }
 
+static void add_game_info(char *buffer, char *templn, bool is_cpursx)
+{
+	if(IS_INGAME)
+	{
+		get_game_info();
+
+		if(strlen(_game_TitleID) == 9)
+		{
+			if(is_cpursx && sys_admin)
+			{
+#ifdef GET_KLICENSEE
+				buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
+#endif
+#ifdef SYS_BGM
+				buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
+#endif
+#ifdef VIDEO_REC
+				buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
+#endif
+			}
+
+			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
+
+			sprintf(templn, "<hr><span style=\"position:relative;top:-20px;\"><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
+
+			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
+			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
+
+			getTitleID(path, app_ver, GET_VERSION); if(*app_ver == '0') *app_ver='v'; if(strstr(_game_Title, app_ver)) *app_ver = NULL;
+
+			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
+
+			sprintf(path, "%s%s", HDD0_GAME_DIR, _game_TitleID);
+			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME");
+
+			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" height=\"60\" border=0%s></a>", path, path, " style=\"position:relative;top:20px;\""); buffer += concat(buffer, templn);
+
+			buffer += concat(buffer, "</H2></span>");
+		}
+	}
+}
+
+
 static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_http)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
@@ -74,54 +117,23 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(strstr(param, "?u")) enable_fan_control(3, templn);
 	}
 
+#ifdef SPOOF_CONSOLEID
 	get_eid0_idps();
 	get_idps_psid();
-
-	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);
-
-	if(IS_INGAME)
-	{
-		get_game_info();
-
-		if(strlen(_game_TitleID) == 9)
-		{
-#ifdef GET_KLICENSEE
-			buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
 #endif
-#ifdef SYS_BGM
-			buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
-#endif
-#ifdef VIDEO_REC
-			buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
-#endif
-			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
 
-			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
+	if(sys_admin) {sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);}
 
-			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
-			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
-
-			getTitleID(path, app_ver, GET_VERSION); if(*app_ver == '0') *app_ver='v'; if(strstr(_game_Title, app_ver)) *app_ver = NULL;
-
-			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
-
-			sprintf(path, "%s%s", HDD0_GAME_DIR, _game_TitleID);
-			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME");
-
-			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" border=0 %s></a>", path, path, "height=\"60\" style=\"position:absolute;top:65px;\""); buffer += concat(buffer, templn);
-
-			buffer += concat(buffer, "</H2>");
-		}
-	}
+	add_game_info(buffer, templn, true);
 
 #ifdef COPY_PS3
 	if(copy_in_progress)
 	{
-		sprintf(templn, "<hr><font size=2><a href=\"/copy.ps3$abort\">&#9746 %s</a> %s (%i %s)</font>", STR_COPYING, current_file, copied_count, STR_FILES); buffer += concat(buffer, templn);
+		sprintf(templn, "<hr><font size=2><a href=\"%s$abort\">&#9746 %s</a> %s (%i %s)</font>", "/copy.ps3", STR_COPYING, current_file, copied_count, STR_FILES); buffer += concat(buffer, templn);
 	}
 	else if(fix_in_progress)
 	{
-		sprintf(templn, "<hr><font size=2><a href=\"/fixgame.ps3$abort\">&#9746 %s</a> %s</font>", STR_FIXING, current_file); buffer += concat(buffer, templn);
+		sprintf(templn, "<hr><font size=2><a href=\"%s$abort\">&#9746 %s</a> %s (%i %s)</font>", "/fixgame.ps3", STR_FIXING, current_file, fixed_count, STR_FILES); buffer += concat(buffer, templn);
 	}
 #endif
 
@@ -182,7 +194,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(isDir(drives[d]))
 		{
 			hdd_free = (int)(get_free_space(drives[d])>>20);
-			sprintf(param, "<br><a href=\"%s\">USB%i: %'d %s</a>", drives[d], (10 * drives[d][9]) + drives[d][10], hdd_free, STR_MBFREE); strcat(templn, param);
+			sprintf(param, "<br><a href=\"%s\">USB%c%c%c: %'d %s</a>", drives[d], drives[d][8], drives[d][9], drives[d][10], hdd_free, STR_MBFREE); strcat(templn, param);
 		}
 	}
 #endif
@@ -232,42 +244,43 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	sprintf( templn, "<a href=\"/dev_hdd0/home/%08i\"><label title=\"Startup\">&#8986;</label> %id %02d:%02d:%02d</a>", xsetting_CC56EB2D()->GetCurrentUserNumber(), dd, hh, mm, ss); buffer += concat(buffer, templn);
 	///////////////////////
 
-	if(isDir("/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
+	if(isDir("/dev_bdvd"))
 	{
-		int fd = 0; memset(param, 0, HTML_RECV_SIZE);
+		get_last_game(param);
 
-		if(cellFsOpen(WMTMP "/last_game.txt", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			cellFsRead(fd, (void *)param, MAX_PATH_LEN, NULL);
-			cellFsClose(fd);
-
-			if(strlen(param) > 10) {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); buffer += concat(buffer, templn); add_breadcrumb_trail(buffer, param); buffer += concat(buffer, "</font>");}
-		}
+		if(*param == '/') {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); buffer += concat(buffer, templn); add_breadcrumb_trail(buffer, param); buffer += concat(buffer, "</font>");}
 	}
 
 	// Get mac address [0xD-0x12]
-	u8 mac_address[0x13];
-	{system_call_3(SYS_NET_EURUS_POST_COMMAND, CMD_GET_MAC_ADDRESS, (u64)(u32)mac_address, 0x13);}
+	if(sys_admin)
+	{
+		u8 mac_address[0x13];
+		{system_call_3(SYS_NET_EURUS_POST_COMMAND, CMD_GET_MAC_ADDRESS, (u64)(u32)mac_address, 0x13);}
 
-	char *cfw_info = param;
-	get_cobra_version(cfw_info);
+		char *cfw_info = param;
+		get_cobra_version(cfw_info);
 
-	char net_type[8] = "", ip[ip_size] = "-";
-	get_net_info(net_type, ip);
+		char net_type[8] = "", ip[ip_size] = "-";
+		get_net_info(net_type, ip);
 
-	sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
-						"Firmware : %s %s<br>"
-						"%s<br>"
+		sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
+							"Firmware : %s %s<br>"
+							"%s<br>"
+#ifdef SPOOF_CONSOLEID
 						"PSID LV2 : %016llX%016llX<hr>"
 						"IDPS EID0: %016llX%016llX<br>"
 						"IDPS LV2 : %016llX%016llX<br>"
+#endif
 						"MAC Addr : %02X:%02X:%02X:%02X:%02X:%02X - %s %s</h2></a></b>",
-					fw_version, cfw_info,
-					(syscalls_removed) ? STR_CFWSYSALRD : "",
-					PSID[0], PSID[1],
-					eid0_idps[0], eid0_idps[1],
-					IDPS[0], IDPS[1],
-					mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); buffer += concat(buffer, templn);
+						fw_version, cfw_info,
+						(syscalls_removed) ? STR_CFWSYSALRD : "",
+#ifdef SPOOF_CONSOLEID
+						PSID[0], PSID[1],
+						eid0_idps[0], eid0_idps[1],
+						IDPS[0], IDPS[1],
+#endif
+						mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); buffer += concat(buffer, templn);
+	}
 
 	/////////////////////////////
 #ifdef COPY_PS3
@@ -278,7 +291,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	else
 	if(fix_in_progress)
 	{
-		buffer += concat(buffer, "<hr>"); sprintf( templn, "%s %s", STR_FIXING, current_file); buffer += concat(buffer, templn);
+		sprintf( templn, "<hr>%s %s (%i %s)", STR_FIXING, current_file, fixed_count, STR_FILES); buffer += concat(buffer, templn);
 	}
 #endif
 	/////////////////////////////

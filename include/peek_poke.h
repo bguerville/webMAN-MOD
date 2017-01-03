@@ -6,7 +6,7 @@
 #define SYSCALL8_OPCODE_PS3MAPI			0x7777
 #define PS3MAPI_OPCODE_LV1_POKE			0x1009
 
-static uint64_t peek_lv1(uint64_t addr)
+static inline uint64_t peek_lv1(uint64_t addr)
 {
 	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
 	return (uint64_t) p1;
@@ -27,8 +27,6 @@ static inline uint64_t peekq(uint64_t addr) //lv2
 	system_call_1(SC_PEEK_LV1, addr + LV2_OFFSET_ON_LV1); //old: {system_call_1(SC_PEEK_LV2, addr);}
 	return (uint64_t) p1;
 }
-
-void add_log2(const char *fmt, uint64_t addr, uint64_t value);
 
 static void pokeq(uint64_t addr, uint64_t value) //lv2
 {
@@ -91,11 +89,11 @@ static void install_peek_poke(void)
 		pokeq(0x800000000000171CULL + 0x40, 0x7C0802A6F8010010ULL);
 		pokeq(0x800000000000171CULL + 0x48, 0x7D4B537844000022ULL);
 		pokeq(0x800000000000171CULL + 0x50, 0xE80100107C0803A6ULL);
-		pokeq(0x800000000000171CULL + 0x58, 0x4E80002080000000ULL);
-		pokeq(0x800000000000171CULL + 0x60, 0x0000170C80000000ULL);
-		pokeq(0x800000000000171CULL + 0x68, 0x0000171480000000ULL);
-		pokeq(0x800000000000171CULL + 0x70, 0x0000171C80000000ULL);
-		pokeq(0x800000000000171CULL + 0x78, 0x0000173C80000000ULL);
+		pokeq(0x800000000000171CULL + 0x58, 0x4E80002080000000ULL); // sc6  @ 0x8000000000001778 = 800000000000170C
+		pokeq(0x800000000000171CULL + 0x60, 0x0000170C80000000ULL); // sc7  @ 0x8000000000001780 = 8000000000001714
+		pokeq(0x800000000000171CULL + 0x68, 0x0000171480000000ULL); // sc8  @ 0x8000000000001788 = 800000000000171C
+		pokeq(0x800000000000171CULL + 0x70, 0x0000171C80000000ULL); // sc9  @ 0x8000000000001790 = 800000000000173C
+		pokeq(0x800000000000171CULL + 0x78, 0x0000173C80000000ULL); // sc10 @ 0x8000000000001798 = 800000000000175C
 		pokeq(0x800000000000171CULL + 0x80, 0x0000175C00000000ULL);
 
 		// enable syscalls 6, 7, 8, 9, 10
@@ -170,15 +168,15 @@ static u16 string_to_lv2(char* path, uint64_t addr)
 
 static uint64_t convertH(char *val)
 {
-	uint64_t ret = 0;
+	uint64_t ret = 0; char c;
 
 	for(uint8_t buff, i = 0, n = 0; i < 16 + n; i++)
 	{
 		if(val[i]==' ') {n++; continue;}
 
-		if(val[i]>='0' && val[i]<='9') buff = (val[i] - '0');      else
-		if(val[i]>='A' && val[i]<='F') buff = (val[i] - 'A' + 10); else
-		if(val[i]>='a' && val[i]<='f') buff = (val[i] - 'a' + 10); else
+		c = (val[i] | 0x20);
+		if(c >= '0' && c <= '9') buff = (c - '0');      else
+		if(c >= 'a' && c <= 'f') buff = (c - 'a' + 10); else
 		return ret;
 
 		ret = (ret << 4) | buff;
@@ -195,7 +193,7 @@ static void Hex2Bin(const char* src, char* target)
 	char value[3]; value[2] = NULL;
 	while(*src && src[1])
 	{
-		value[0] = *src, value[1] = src[1];
+		value[0] = src[0], value[1] = src[1];
 		*(target++) = (u8)convertH(value);
 		src += 2;
 	}

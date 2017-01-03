@@ -1,3 +1,5 @@
+#ifdef SPOOF_CONSOLEID
+
 #define SC_GET_IDPS 					(870)
 #define SC_GET_PSID 					(872)
 
@@ -32,7 +34,6 @@ static void get_idps_psid(void)
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 }
 
-#ifdef SPOOF_CONSOLEID
 static void spoof_idps_psid(void)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
@@ -44,10 +45,11 @@ static void spoof_idps_psid(void)
 		newPSID[0] = convertH(webman_config->vPSID1);
 		newPSID[1] = convertH(webman_config->vPSID2);
 
+#ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware <= 4.53f)
 		{
 			{system_call_1(SC_GET_PSID, (uint64_t) PSID);}
-			for(uint64_t addr = 0x8000000000300000ULL; addr < 0x8000000000600000ULL; addr+=4)
+			for(uint64_t addr = 0x80000000003B0000ULL; addr < 0x80000000004A0000ULL; addr+=4)
 			{
 				if((peekq(addr) == PSID[0]) && (peekq(addr+8) == PSID[1]))
 				{
@@ -56,7 +58,9 @@ static void spoof_idps_psid(void)
 				}
 			}
 		}
-		else if(psid_offset)
+		else
+#endif
+		if(psid_offset)
 		{
 			pokeq(psid_offset  , newPSID[0]);
 			pokeq(psid_offset+8, newPSID[1]);
@@ -72,10 +76,11 @@ static void spoof_idps_psid(void)
 
 		if(newIDPS[0] != 0 && newIDPS[1] != 0)
 		{
+#ifndef LAST_FIRMWARE_ONLY
 			if(c_firmware <= 4.53f)
 			{
 				{system_call_1(SC_GET_IDPS, (uint64_t) IDPS);}
-				for(uint64_t addr = 0x8000000000300000ULL; addr < 0x8000000000600000ULL; addr+=4)
+				for(uint64_t addr = 0x80000000003B0000ULL; addr < 0x80000000004A0000ULL; addr+=4)
 				{
 					if((peekq(addr) == IDPS[0]) && (peekq(addr + 8) == IDPS[1]))
 					{
@@ -84,7 +89,9 @@ static void spoof_idps_psid(void)
 					}
 				}
 			}
-			else if(idps_offset1 | idps_offset2)
+			else
+#endif
+			if(idps_offset1 | idps_offset2)
 			{
 				pokeq(idps_offset1  , newIDPS[0]);
 				pokeq(idps_offset1+8, newIDPS[1]);
@@ -96,7 +103,6 @@ static void spoof_idps_psid(void)
 
 	get_idps_psid();
 }
-#endif
 
 static void get_eid0_idps(void)
 {
@@ -119,6 +125,8 @@ static void get_eid0_idps(void)
 
 static void show_idps(char *msg)
 {
+	if(!sys_admin) return;
+
 	get_eid0_idps();
 	get_idps_psid();
 
@@ -134,3 +142,5 @@ static void show_idps(char *msg)
 	show_msg(msg);
 	sys_timer_sleep(2);
 }
+
+#endif

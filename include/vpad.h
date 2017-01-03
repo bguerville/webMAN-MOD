@@ -1,4 +1,15 @@
 #ifdef VIRTUAL_PAD
+
+// /pad.ps3?off           turns off virtual pad
+// /pad.ps3?<buttons>     press the specified buttons
+// /pad.ps3?hold<buttons> keeps the specified buttons pressed
+// /pad.ps3?release       release all the buttons
+
+// /pad.ps3?cross=enter   Sets X as enter, O as cancel  (PS3 is rebooted)
+// /pad.ps3?cross=swap    Swaps the behavior of X and O (PS3 is rebooted)
+// /pad.ps3?circle=enter  Sets O as enter, X as cancel  (PS3 is rebooted)
+// /pad.ps3?circle=swap   Swaps the behavior of X and O (PS3 is rebooted)
+
 #include <cell/pad/libpad_dbg.h>
 
 #define SC_PAD_SET_DATA_INSERT_MODE		(573)
@@ -6,7 +17,7 @@
 
 static uint32_t vcombo = 0;
 
-static int32_t vpad_handle = -1;
+static int32_t vpad_handle = NONE;
 
 static inline void sys_pad_dbg_ldd_register_controller(uint8_t *data, int32_t *handle, uint8_t addr, uint32_t capability)
 {
@@ -22,13 +33,13 @@ static inline void sys_pad_dbg_ldd_set_data_insert_mode(int32_t handle, uint16_t
 
 static int32_t register_ldd_controller(void)
 {
-	uint8_t data[0x114];
-	int32_t port;
-	uint32_t capability, mode, port_setting;
-
 	// register ldd controller with custom device capability
 	if (vpad_handle < 0)
 	{
+		uint8_t data[0x114];
+		int32_t port;
+		uint32_t capability, mode, port_setting;
+
 		capability = 0xFFFF; // CELL_PAD_CAPABILITY_PS3_CONFORMITY | CELL_PAD_CAPABILITY_PRESS_MODE | CELL_PAD_CAPABILITY_HP_ANALOG_STICK | CELL_PAD_CAPABILITY_ACTUATOR;
 		sys_pad_dbg_ldd_register_controller(data, (int32_t *)&(vpad_handle), 5, (uint32_t)capability << 1); //vpad_handle = cellPadLddRegisterController();
 		sys_timer_usleep(500000); // allow some time for ps3 to register ldd controller
@@ -56,7 +67,7 @@ static int32_t unregister_ldd_controller(void)
 	{
 		int32_t r = cellPadLddUnregisterController(vpad_handle);
 		if (r != CELL_OK) return(r);
-		vpad_handle = -1;
+		vpad_handle = NONE;
 	}
 	return(CELL_PAD_OK);
 }
@@ -132,6 +143,7 @@ static u8 parse_pad_command(const char *param, u8 is_combo)
 
 		if(is_combo) {vcombo = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] << 8) | (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1]); return CELL_OK;}
 
+		// assign enter button
 		if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_CROSS | CELL_PAD_CTRL_CIRCLE)) && ((param[5] == '=') || (param[6] == '=')))
 		{
 			int enter_button = 1;
@@ -171,6 +183,20 @@ static u8 parse_pad_command(const char *param, u8 is_combo)
 
 	return CELL_OK;
 }
+
+#ifdef PKG_HANDLER
+static void press_cancel_button(void)
+{
+	int enter_button = 0;
+	xsetting_0AF1F161()->GetEnterButtonAssign(&enter_button);
+
+	if(enter_button)
+		parse_pad_command("circle", 0);
+	else
+		parse_pad_command("cross", 0);
+}
+#endif
+
 #endif
 
 static CellPadData pad_read(void)

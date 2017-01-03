@@ -135,7 +135,7 @@ int sys_get_version(u32 *version)
 int sys_get_mamba(void)
 {
 	lv2syscall1(8, 0x7FFF);
-    return_to_user_prog(int);
+	return_to_user_prog(int);
 }
 
 bool is_mamba(void)
@@ -143,7 +143,7 @@ bool is_mamba(void)
 	sysFSStat stat;
 	if(sysLv2FsStat(HDDROOT_DIR "/mamba_plugins.txt", &stat) == SUCCESS) return true;
 
-    u32 version = 0x99999999;
+	u32 version = 0x99999999;
 	if (sys_get_version(&version) < 0) return false;
 	if (sys_get_mamba() == 0x666) return true;
 	return false;
@@ -153,17 +153,17 @@ bool is_disabled(char *filename, char *filename2)
 {
 	sysFSStat stat;
 
-    if(sysLv2FsStat("/dev_blind", &stat) != SUCCESS)
-       sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0);
+	if(sysLv2FsStat("/dev_blind", &stat) != SUCCESS)
+		sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0);
 
-    if(sysLv2FsStat(filename, &stat) == SUCCESS)
-    {
-        sysLv2FsRename(filename, filename2); // re-enable stage2.bin
+	if(sysLv2FsStat(filename, &stat) == SUCCESS)
+	{
+		sysLv2FsRename(filename, filename2); // re-enable stage2.bin
 
-        return true;
-    }
+		return true;
+	}
 
-    return false;
+	return false;
 }
 
 bool is_cobra(void)
@@ -181,7 +181,7 @@ bool is_cobra(void)
 	if(sysLv2FsStat(HDDROOT_DIR "/boot_plugins.txt", &stat) == SUCCESS) return true;
 	if(sysLv2FsStat("/dev_flash/rebug/cobra", &stat) == SUCCESS) return true;
 
-	if (is_mamba())         return false;
+	if (is_mamba()) return false;
 
 	u32 version = 0x99999999;
 	if (sys_get_version(&version) < 0) return false;
@@ -324,29 +324,29 @@ int main()
 
 //--- hold CROSS
 
-    unsigned button = 0;
+	unsigned button = 0;
 
-    padInfo padinfo;
-    padData paddata;
+	padInfo padinfo;
+	padData paddata;
 
-    ioPadInit(7);
+	ioPadInit(7);
 
-    int n, r;
-    for(r=0; r<10; r++)
-    {
-        ioPadGetInfo(&padinfo);
-        for(n = 0; n < 7; n++)
-        {
-            if(padinfo.status[n])
-            {
-                ioPadGetData(n, &paddata);
-                button = (paddata.button[2] << 8) | (paddata.button[3] & 0xff);
-                break;
-            }
-        }
-        if(button) break; else usleep(20000);
-    }
-    ioPadEnd();
+	int n, r;
+	for(r=0; r<10; r++)
+	{
+		ioPadGetInfo(&padinfo);
+		for(n = 0; n < 7; n++)
+		{
+			if(padinfo.status[n])
+			{
+				ioPadGetData(n, &paddata);
+				button = (paddata.button[2] << 8) | (paddata.button[3] & 0xff);
+				break;
+			}
+		}
+		if(button) break; else usleep(20000);
+	}
+	ioPadEnd();
 
 	if(button & 0x04) full=true; else
 	if(button & 0x60) lite=true;  // circle / cross
@@ -449,8 +449,8 @@ int main()
 	CopyFile(APP_USRDIR "/background.gif", XMLHOST_DIR "/background.gif");
 
 	// copy javascripts
-	CopyFile(APP_USRDIR "/jquery.min.js",    XMLHOST_DIR "/jquery.min.js");  // jQuery v3.1.0
-	CopyFile(APP_USRDIR "/jquery-ui.min.js", XMLHOST_DIR "/jquery-ui.min.js"); // jQuery UI v1.12.0
+	CopyFile(APP_USRDIR "/jquery.min.js",    XMLHOST_DIR "/jquery.min.js");  // jQuery v3.1.1
+	CopyFile(APP_USRDIR "/jquery-ui.min.js", XMLHOST_DIR "/jquery-ui.min.js"); // jQuery UI v1.12.1
 
 	CopyFile(APP_USRDIR "/fm.js",     XMLHOST_DIR "/fm.js");
 	CopyFile(APP_USRDIR "/games.js",  XMLHOST_DIR "/games.js");
@@ -467,6 +467,7 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_album_ps2.png", ICONS_DIR "/icon_wm_album_ps2.png");
 	CopyFile(APP_USRDIR "/icon_wm_album_psp.png", ICONS_DIR "/icon_wm_album_psp.png");
 	CopyFile(APP_USRDIR "/icon_wm_album_dvd.png", ICONS_DIR "/icon_wm_album_dvd.png");
+	CopyFile(APP_USRDIR "/icon_wm_album_emu.png", ICONS_DIR "/icon_wm_album_emu.png");
 
 	CopyFile(APP_USRDIR "/icon_wm_ps3.png"      , ICONS_DIR "/icon_wm_ps3.png");
 	CopyFile(APP_USRDIR "/icon_wm_psx.png"      , ICONS_DIR "/icon_wm_psx.png");
@@ -477,6 +478,26 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_settings.png" , ICONS_DIR "/icon_wm_settings.png");
 	CopyFile(APP_USRDIR "/icon_wm_eject.png"    , ICONS_DIR "/icon_wm_eject.png"   );
 //  CopyFile(APP_USRDIR "/icon_wm_root.png"     , ICONS_DIR "/icon_wm_root.png"    );
+
+	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
+
+	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
+
+	// webMAN LaunchPad icons
+	CopyFile(APP_USRDIR "/icon_lp_ps3.png"      , ICONS_DIR "/icon_lp_ps3.png");
+	CopyFile(APP_USRDIR "/icon_lp_psx.png"      , ICONS_DIR "/icon_lp_psx.png");
+	CopyFile(APP_USRDIR "/icon_lp_ps2.png"      , ICONS_DIR "/icon_lp_ps2.png");
+	CopyFile(APP_USRDIR "/icon_lp_psp.png"      , ICONS_DIR "/icon_lp_psp.png");
+	CopyFile(APP_USRDIR "/icon_lp_dvd.png"      , ICONS_DIR "/icon_lp_dvd.png");
+	CopyFile(APP_USRDIR "/icon_lp_blu.png"      , ICONS_DIR "/icon_lp_blu.png");
+	CopyFile(APP_USRDIR "/icon_lp_nocover.png"  , ICONS_DIR "/icon_lp_nocover.png");
+
+	CopyFile(APP_USRDIR "/eject.png"  			, XMLMANPLS_IMAGES_DIR "/eject.png");
+	CopyFile(APP_USRDIR "/setup.png"  			, XMLMANPLS_IMAGES_DIR "/setup.png");
+	CopyFile(APP_USRDIR "/refresh.png"			, XMLMANPLS_IMAGES_DIR "/refresh.png");
+	//CopyFile(APP_USRDIR "/clear.png"  		, XMLMANPLS_IMAGES_DIR "/clear.png");
+	//CopyFile(APP_USRDIR "/cache.png"  		, XMLMANPLS_IMAGES_DIR "/cache.png");
+	//CopyFile(APP_USRDIR "/restart.png"		, XMLMANPLS_IMAGES_DIR "/restart.png");
 
 	// XMBM+ webMAN
 	sysLv2FsMkdir(XMLMANPLS_DIR, 0777);
@@ -538,6 +559,9 @@ int main()
 	CopyFile(APP_USRDIR "/usbredirect.png" 	, XMLMANPLS_IMAGES_DIR "/usbredirect.png");
 	CopyFile(APP_USRDIR "/vshmenu.png"   	, XMLMANPLS_IMAGES_DIR "/vshmenu.png");
 	CopyFile(APP_USRDIR "/webman.png"  		, XMLMANPLS_IMAGES_DIR "/webman.png");
+
+	CopyFile(APP_USRDIR "/icon_wm_eject.png", XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
+	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 
@@ -619,7 +643,7 @@ int main()
 		if(sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
 		{
 			CopyFile(APP_USRDIR "/raw_iso.sprx", PLUGINS_DIR "/raw_iso.sprx");
-            if(sysLv2FsStat(PLUGINS_DIR "/raw_iso.sprx", &stat) == SUCCESS) sysLv2FsUnlink(HDDROOT_DIR "/raw_iso.sprx");
+			if(sysLv2FsStat(PLUGINS_DIR "/raw_iso.sprx", &stat) == SUCCESS) sysLv2FsUnlink(HDDROOT_DIR "/raw_iso.sprx");
 		}
 		else
 			CopyFile(APP_USRDIR "/raw_iso.sprx", HDDROOT_DIR "/raw_iso.sprx");
@@ -690,7 +714,7 @@ int main()
 cont:
 
 	// update dev_flash (rebug)
-	if((sysLv2FsStat(FLASH_VSH_MODULE_DIR "/webftp_server.sprx", &stat) == SUCCESS) || (sysLv2FsStat(FLASH_VSH_MODULE_DIR "/webftp_server.sprx.bak", &stat) == SUCCESS))
+	if(sysLv2FsStat(FLASH_VSH_MODULE_DIR "/webftp_server.sprx", &stat) == SUCCESS)
 	{
 		is_cobra(); // re-enable cobra if it's disabled
 
@@ -744,9 +768,26 @@ cont:
 		//{lv2syscall4(379,0x200,0,0,0); return_to_user_prog(int);}
 		//{lv2syscall4(379,0x1200,0,0,0); return_to_user_prog(int);}
 		{lv2syscall3(SC_SYS_POWER, SYS_REBOOT, 0, 0); return_to_user_prog(int);}
-        //{lv2syscall3(SC_SYS_POWER, SYS_REBOOT, 0, 0);}
+		//{lv2syscall3(SC_SYS_POWER, SYS_REBOOT, 0, 0);}
 
 		return 0;
+	}
+	else if(sysLv2FsStat(FLASH_VSH_MODULE_DIR "/webftp_server.sprx.bak", &stat) == SUCCESS)
+	{
+		if(sysLv2FsStat("/dev_blind", &stat) != SUCCESS)
+			sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0);
+
+		sysLv2FsChmod(REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak", 0777);
+		sysLv2FsUnlink(REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
+
+		if(full)
+			CopyFile(APP_USRDIR "/webftp_server_full.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
+		else if(lite)
+			CopyFile(APP_USRDIR "/webftp_server_lite.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
+		else if(is_ps3mapi())
+			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
+		else
+			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_multi23.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
 	}
 
 	// update boot_plugins.txt

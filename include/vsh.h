@@ -89,9 +89,31 @@ static void enable_ingame_screenshot(void)
 }
 #endif
 
+static void explore_exec_push(u32 usecs, u8 focus_first)
+{
+	if(explore_interface)
+	{
+		sys_timer_usleep(usecs);
+
+		if(focus_first)
+		{
+			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+		}
+
+		explore_interface->ExecXMBcommand("exec_push", 0, 0);
+
+		if(focus_first)
+		{
+			sys_timer_usleep(2000000);
+			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+		}
+	}
+}
+
 static void launch_disc(char *category, char *seg_name)
 {
 	u8 n;
+
 	for(n = 0; n < 15; n++) {if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
 	if(IS(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
@@ -103,43 +125,55 @@ static void launch_disc(char *category, char *seg_name)
 		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
 		// default category
-		if(!category[0]) sprintf(category, "game");
+		if(!*category) sprintf(category, "game");
 
 		// default segment
-		if(!seg_name[0]) sprintf(seg_name, "seg_device");
+		if(!*seg_name) sprintf(seg_name, "seg_device");
 
 		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{
+			u8 retry = 0, timeout = 4, icon_found = 0;
+
+			while(View_Find("webrender_plugin") || View_Find("webbrowser_plugin"))
+			{
+				sys_timer_usleep(500000); retry++; if(retry > 4) break;
+			}
+
 			// use segment for media type
 			if(IS(category, "game") && IS(seg_name, "seg_device"))
 			{
-				if(isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")) ; else
+				if(isDir("/dev_bdvd/PS3_GAME")) {timeout = 20, icon_found = timeout - 8;} else
+				if(file_exists("/dev_bdvd/SYSTEM.CNF")) ; else
 				if(isDir("/dev_bdvd/BDMV") )    {sprintf(category, "video"); sprintf(seg_name, "seg_bdmav_device");} else
 				if(isDir("/dev_bdvd/VIDEO_TS")) {sprintf(category, "video"); sprintf(seg_name, "seg_dvdv_device" );} else
 				if(isDir("/dev_bdvd/AVCHD"))    {sprintf(category, "video"); sprintf(seg_name, "seg_avchd_device");} else
 				{return;}
 			}
 
-			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
-			explore_interface->ExecXMBcommand("close_all_list",0,0);
-			sys_timer_usleep(200000);
-			{sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command,0,0);}
-			sys_timer_usleep(500000);
-			explore_interface->ExecXMBcommand("close_all_list",0,0);
-			sys_timer_usleep(200000);
-			sprintf(explore_command, "focus_segment_index %s", seg_name);
-			explore_interface->ExecXMBcommand((char*)explore_command,0,0);
-			sys_timer_usleep(500000);
-			explore_interface->ExecXMBcommand("exec_push",0,0);
+			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+
+			for(n = 0; n < timeout; n++)
+			{
+				if((n < icon_found) && file_exists("/dev_hdd0/tmp/game/ICON0.PNG")) n = icon_found;
+
+				sys_timer_usleep(100000);
+				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+				sys_timer_usleep(250000);
+				sprintf(explore_command, "focus_category %s", category);
+				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
+				sys_timer_usleep(250000);
+				sprintf(explore_command, "focus_segment_index %s", seg_name);
+				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
+				sys_timer_usleep(150000);
+			}
+
+			explore_interface->ExecXMBcommand("exec_push", 0, 0);
 		}
 		else {BEEP3}
 	}
 }
 
-
 /*
-#include "vsh/xmb_plugin.h"
-
 static void show_msg2(char* msg) // usage: show_msg2(L"text");
 {
 	if(View_Find("xmb_plugin") != 0)

@@ -56,7 +56,12 @@ static char root_directory[MAX_PATH_LEN];
 static size_t root_len = 0;
 
 #ifdef WIN32
+#ifdef MERGE_DRIVES
 static char *ignore_drives;
+static int ignore_drives_len = 0;
+#endif
+#else
+#undef MERGE_DRIVES
 #endif
 
 static int initialize_socket(uint16_t port)
@@ -193,7 +198,6 @@ static char *translate_path(char *path, int del, int *viso)
 	if(path[0] != '/')
 	{
 		DPRINTF("path must start by '/'. Path received: %s\n", path);
-
 		if(del)
 		{
 			if(path) free(path);
@@ -202,26 +206,25 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 	// check unsecure path
+	int plen = strlen(path);
+
 	p = path;
-	while ((p[0] > ' ') && (p = strstr(p, "..")))
+	while ((plen >= 2) && (p = strstr(p, "..")))
 	{
-		if(strlen(p) >= 2)
+		if(*(p-1) == '/' || *(p-1) == '\\')
 		{
-			if(*(p-1) == '/' || *(p-1) == '\\')
+			if(p[2] == 0 || p[2] == '/' || p[2] == '\\')
 			{
-				if(p[2] == 0 || p[2] == '/' || p[2] == '\\')
+				DPRINTF("The path \"%s\" is unsecure!\n", path);
+				if(del)
 				{
-					DPRINTF("The path \"%s\" is unsecure!\n", path);
-					if(del)
-					{
-						if(path) free(path);
-					}
-					return NULL;
+					if(path) free(path);
 				}
+				return NULL;
 			}
 		}
 
-		p += 2;
+		p += 2, plen -= 2;
 	}
 
 	size_t path_len = strlen(path);
@@ -241,15 +244,13 @@ static char *translate_path(char *path, int del, int *viso)
 
 		if(strstr(q, "/***PS3***/") == q)
 		{
-			sprintf(p, "%s%s", root_directory, path + 10);
-			sprintf(path, "%s", p + root_len);
+			memmove(q, q + 10, strlen(q + 10) + 1);
 			DPRINTF("p -> %s\n", p);
 			*viso = VISO_PS3;
 		}
 		else if(strstr(q, "/***DVD***/") == q)
 		{
-			sprintf(p, "%s%s", root_directory, path + 10);
-			sprintf(path, "%s", p + root_len);
+			memmove(q, q + 10, strlen(q + 10)+1);
 			DPRINTF("p -> %s\n", p);
 			*viso = VISO_ISO;
 		}
@@ -260,12 +261,11 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 #ifdef WIN32
-	for(int i = 0; i < (root_len + path_len); i++) if(p[i] == '/') p[i] = '\\';
-
-	int pos = strlen(p) - 1; if(pos > 0 && (p[pos] == '/' || p[pos] == '\\')) p[pos] = 0;
+	file_stat_t st;
+	path_len = strlen(p);
+	for(int i = 0; i < path_len; i++) if(p[i] == '\\') p[i] = '/';
 
 	#ifdef MERGE_DRIVES
-	file_stat_t st;
 	if(stat_file(p, &st) < 0)
 	{
 		for(int drive = 'C'; drive <= 'Z'; drive++)
@@ -274,18 +274,18 @@ static char *translate_path(char *path, int del, int *viso)
 			{
 				bool ignore; ignore = false;
 
-				for(int d = 0; d < strlen(ignore_drives); d++)
+				for(uint8_t d = 0; d < ignore_drives_len; d++)
 					if((ignore_drives[d] & 0xFF) == drive) {ignore = true; break;}
 
 				if(ignore) continue;
 			}
 
 			sprintf(p, "%c:%s", drive, path);
-			int pos = strlen(p) - 1; if(pos > 0 && (p[pos] == '/' || p[pos] == '\\')) p[pos] = 0;
 			if(stat_file(p, &st) >= 0) break;
 		}
 	}
 	#endif
+
 #endif
 
 	if(del)
@@ -374,8 +374,6 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 	uint16_t fp_len;
 	int ret, viso = VISO_NONE;
 
-	client->CD_SECTOR_SIZE = 2352;
-
 	result.file_size = BE64(-1);
 	result.mtime = BE64(0);
 
@@ -393,10 +391,17 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		delete client->ro_file;
 	}
 
-	filepath[fp_len] = 0;
 	ret = recv_all(client->s, (void *)filepath, fp_len);
 
-	if((ret != fp_len) || !strcmp(filepath, "/CLOSEFILE"))
+	filepath[fp_len] = 0;
+
+	if(!strcmp(filepath, "/CLOSEFILE"))
+	{
+		free(filepath);
+		return 0;
+	}
+
+	if(ret != fp_len)
 	{
 		DPRINTF("recv failed, getting filename for open: %d %d\n", ret, get_network_error());
 		free(filepath);
@@ -410,8 +415,6 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		return -1;
 	}
 
-	printf("open %s\n", filepath);
-
 	if(viso == VISO_NONE)
 	{
 		client->ro_file = new File();
@@ -421,6 +424,8 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		printf("building virtual iso...\n");
 		client->ro_file = new VIsoFile((viso == VISO_PS3));
 	}
+
+	client->CD_SECTOR_SIZE = 2352;
 
 	if(client->ro_file->open(filepath, O_RDONLY) < 0)
 	{
@@ -439,16 +444,19 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 			result.file_size = BE64(st.file_size);
 			result.mtime = BE64(st.mtime);
 
-			// detect cd sector size
-			if(IS_RANGE(st.file_size, 0x10000UL, 0x35000000UL))
+			if(viso != VISO_NONE || BE64(st.file_size) > 0x400000UL) printf("open %s\n", filepath + root_len);
+
+			// detect cd sector size (2MB - 848MB)
+			if(IS_RANGE(st.file_size, 0x200000UL, 0x35000000UL))
 			{
-				char buffer[0x10] = "";
+				char buffer[0x10] = ""; client->CD_SECTOR_SIZE = 0;
+
 				client->ro_file->seek(0x8020UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2048; else {
 				client->ro_file->seek(0x9220UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2336; else {
 				client->ro_file->seek(0x9320UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2352; else {
 				client->ro_file->seek(0x9920UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2448; }}}
 
-				printf("CD sector size: %i\n", client->CD_SECTOR_SIZE);
+				if(client->CD_SECTOR_SIZE > 0) printf("CD sector size: %i\n", client->CD_SECTOR_SIZE); else client->CD_SECTOR_SIZE = 2352;
 			}
 		}
 	}
@@ -880,6 +888,7 @@ static int process_open_dir_cmd(client_t *client, netiso_open_dir_cmd *cmd)
 {
 	netiso_open_dir_result result;
 	char *dirpath;
+
 	int ret;
 
 	uint16_t dp_len = BE16(cmd->dp_len);
@@ -1114,28 +1123,29 @@ send_result_read_dir:
 static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd)
 {
 	(void) cmd;
-	file_stat_t st;
-	struct dirent *entry;
 	int64_t dir_size = 0;
 
 	netiso_read_dir_result result;
 	memset(&result, 0, sizeof(result));
 
 	netiso_read_dir_result_data *dir_entries = (netiso_read_dir_result_data *) malloc(sizeof(netiso_read_dir_result_data) * MAX_ENTRIES);
+	memset(dir_entries, 0, sizeof(netiso_read_dir_result_data) * MAX_ENTRIES);
 
-	if(!dir_entries || !client->dir || !client->dirpath)
+	if(!client->dir || !client->dirpath || !dir_entries)
 	{
 		result.dir_size = (0);
 		goto send_result_read_dir_cmd;
 	}
 
-	memset(dir_entries, 0, sizeof(netiso_read_dir_result_data) * MAX_ENTRIES);
-
 	size_t d_name_len, dirpath_len;
 	dirpath_len = strlen(client->dirpath);
 
+	file_stat_t st;
+	struct dirent *entry;
+
 	while ((entry = readdir(client->dir)))
 	{
+		if(!entry) break;
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
 		d_name_len = strlen(entry->d_name);
@@ -1147,11 +1157,13 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 			if(!path) break;
 
 			sprintf(path, "%s/%s", client->dirpath, entry->d_name);
+
 			st.file_size = 0;
 			st.mode = S_IFDIR;
 			st.mtime = 0;
 			st.atime = 0;
 			st.ctime = 0;
+
 			stat_file(path, &st);
 
 			if(!st.mtime) st.mtime = st.ctime;
@@ -1197,7 +1209,7 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 			{
 				bool ignore = false;
 
-				for(int d = 0; d < strlen(ignore_drives); d++)
+				for(uint8_t d = 0; d < ignore_drives_len; d++)
 					if((ignore_drives[d]  & 0xFF) == drive) {ignore = true; break;}
 
 				if(ignore) continue;
@@ -1210,9 +1222,10 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 
 			while ((entry = readdir(client->dir)))
 			{
+				if(!entry) break;
 				if(IS_PARENT_DIR(entry->d_name)) continue;
 
-				d_name_len = strlen(entry->d_name);
+				d_name_len = entry->d_namlen; //strlen(entry->d_name);
 
 				if(IS_RANGE(d_name_len, 1, MAX_PATH_LEN))
 				{
@@ -1493,7 +1506,7 @@ int main(int argc, char *argv[])
 	uint32_t whitelist_end = 0;
 	uint16_t port = NETISO_PORT;
 
-	printf("ps3netsrv build 20160826.1 (mod by aldostools)\n");
+	printf("ps3netsrv build 20161211 (mod by aldostools)\n");
 
 #ifndef WIN32
 	if(sizeof(off_t) < 8)
@@ -1503,12 +1516,23 @@ int main(int argc, char *argv[])
 	}
 #endif
 
+	file_stat_t fs;
+
+	if(argc < 2 && ((stat_file("./PS3ISO", &fs) >= 0) || (stat_file("./PSXISO", &fs) >= 0) || (stat_file("./GAMES", &fs) >= 0) || (stat_file("./GAMEZ", &fs) >= 0)  || (stat_file("./DVDISO", &fs) >= 0) || (stat_file("./BDISO", &fs) >= 0))) {argv[1] = (char *)malloc(2); sprintf(argv[1], "."); argc = 2;}
+
 	if(argc < 2)
 	{
-		printf( "Usage: %s rootdirectory [port] [whitelist]\n"
+		#ifdef MERGE_DRIVES
+		printf( "\nUsage: %s [rootdirectory] [port] [whitelist] [ignore drive letters]\n\n"
 				"Default port: %d\n"
 				"Whitelist: x.x.x.x, where x is 0-255 or *\n"
 				"(e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", argv[0], NETISO_PORT);
+		#else
+		printf( "\nUsage: %s [rootdirectory] [port] [whitelist]\n\n"
+				"Default port: %d\n"
+				"Whitelist: x.x.x.x, where x is 0-255 or *\n"
+				"(e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", argv[0], NETISO_PORT);
+		#endif
 		return -1;
 	}
 
@@ -1629,7 +1653,7 @@ int main(int argc, char *argv[])
 		DPRINTF("Whitelist: %08X-%08X\n", whitelist_start, whitelist_end);
 	}
 
-#ifdef WIN32
+#ifdef MERGE_DRIVES
 	if(argc > 4)
 	{
 		ignore_drives = argv[4];
@@ -1642,7 +1666,9 @@ int main(int argc, char *argv[])
 	// convert to upper case
 	if(ignore_drives)
 	{
-		for(int d = 0; d < strlen(ignore_drives); d++)
+		ignore_drives_len = strlen(ignore_drives);
+
+		for(uint8_t d = 0; d < ignore_drives_len; d++)
 			if((ignore_drives[d] >= 'a') && (ignore_drives[d] <= 'z')) ignore_drives[d] -= ('a'-'A');
 	}
 #endif
@@ -1730,11 +1756,12 @@ int main(int argc, char *argv[])
 	}
 
 #ifdef WIN32
+	#ifdef MERGE_DRIVES
 	if(ignore_drives)
 	{
 		free(ignore_drives);
 	}
-
+	#endif
 	WSACleanup();
 #endif
 

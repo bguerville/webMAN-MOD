@@ -72,13 +72,19 @@ We would like to integrate all existing features available on the PS3 Scene like
 
 ## How to build
 Requirements for Windows:
-- git, clone this repository with the following command: *git clone https://github.com/Matsumot0/webMAN-MOD.git*
+- git, clone this repository with the following command: *git clone https://github.com/aldostools/webMAN-MOD.git*
 - Official PS3 SDK v3.40 or 4.00 complete leaked version, google is your friend to find it
-- Open Source PSL1GHT SDK to compile prepNTFS and PKG Updater only.
 - GCC (for Windows [MinGW](http://sourceforge.net/projects/mingw) with mingw32-base will be fine) or [Cygwin (x86/x64)](https://cygwin.com/install.html)
+- Open Source PSL1GHT SDK to compile prepNTFS and PKG Updater only
 
 Requirements for GNU/Linux:
-- Soon...
+- An x86 linux distribution, Fedora 20 is tested working
+- git, clone this repository with the following command: *git clone https://github.com/aldostools/webMAN-MOD.git*
+- Official PS3 SDK v400.001 leaked version
+- Official Cell OS Lv-2 leaked toolchain (a 4.1M patched GCC 4.1.1 version)
+- wine for the missing linux tools
+- A compiled Scetool binary, ps3 keys
+- Open Source PSL1GHT SDK to compile prepNTFS and PKG Updater only
 
 ## Credits
 - All the documentation on *http://www.psdevwiki.com*, and to all the devs who contributed
@@ -92,6 +98,7 @@ Requirements for GNU/Linux:
 - bguerville for web downloader & package installer module
 - Mysis, who wrote some useful libs and reverse engineering VSH Exports functions: http://www.ps3devwiki.com/ps3/VSH#Exports
 - 3141card for VSH Menu POC & Littlebalup for his enhancement/new features
+- jjolano (John Olano) for OpenFTP server
 - PSX-SCENE, PSX-PLACE, PLAYSTATIONHAX, PS3HAX & other scene websites/users, who translated, helped in the testing process
 
 

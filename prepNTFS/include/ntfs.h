@@ -31,6 +31,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <ppu-lv2.h>
+#include <stdio.h>
 
 #include <fcntl.h> // file flags
 #include <sys/syslimits.h>
@@ -198,7 +199,8 @@ int ps3ntfs_unlink(const char *name);
 int ps3ntfs_chdir(const char *name);
 int ps3ntfs_rename(const char *oldName, const char *newName);
 int ps3ntfs_mkdir(const char *path, int mode);
-int ps3ntfs_file_to_sectors(const char *path, uint32_t *sec_out, uint32_t *size_out, int max, int phys); 
+int ps3ntfs_file_to_sectors(const char *path, uint32_t *sec_out, uint32_t *size_out, int max, int phys);
+int ps3ntfs_get_fd_from_FILE(FILE *fp);
 
 typedef struct {
     int device;
@@ -209,6 +211,10 @@ DIR_ITER*  ps3ntfs_diropen(const char *path);
 int ps3ntfs_dirreset(DIR_ITER *dirState);
 int ps3ntfs_dirnext(DIR_ITER *dirState, char *filename, struct stat *filestat);
 int ps3ntfs_dirclose(DIR_ITER *dirState);
+
+// map file functions to libc open, fopen, ...
+void NTFS_init_system_io(void);
+void NTFS_deinit_system_io(void);
 
 
 #ifndef _SYS_STATVFS_H

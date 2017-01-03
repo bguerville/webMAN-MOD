@@ -23,7 +23,7 @@ function rn(f){
 }
 function ku(e){
 	e=e||window.event;
-	if(e.keyCode==113){a=document.querySelectorAll('a:hover')[0].pathname.replace('/mount.ps3','');rn(a);}
+	if(e.keyCode==113){try{a=document.querySelectorAll('a:hover')[0].pathname.replace('/mount.ps3','');rn(a);}catch(err){}}
 }
 
 // Right-click menu
@@ -40,11 +40,23 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<a id='m5'>Copy<br></a>" +
 				"<a id='m6'>Paste<br></a>" +
 				"<hr>" +
-				"<a id='ml'>Open Location<br></a>" +
+				"<a id='ml'>Dir by Name<br></a>" +
+				"<a id='ss'>Dir by Size<br></a>" +
+				"<a id='sd'>Dir by Date<br></a>" +
+				"<hr>" +
 				"<a id='m7'>Rename<br></a>" +
-				"<a id='m8'>Copy To<br></a></div>");
+				"<a id='m8'>Copy To</a><br>" +
+				"<a id='m9'>Copy & overwrite<br></a>"+
+				"</div>");
 
 var s,m;
+
+document.oncopy = function(e){
+	e.preventDefault();
+	try{a=document.querySelectorAll('a:hover')[0].href;}catch(err){}
+	var clipboard=e.clipboardData;
+	clipboard.setData("text/plain",a);
+};
 
 window.addEventListener('contextmenu',function(e){
 
@@ -65,11 +77,15 @@ window.addEventListener('contextmenu',function(e){
 		m5.href='/cpy.ps3'+p;
 		m6.href='/paste.ps3'+self.location.pathname;m6.style.display=mf.style.display=(c=='w'||c=='d')?b:n;
 		m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?b:n;
-		m8.href='/copy.ps3'+p; m8.text = 'Copy to ' + ((p.indexOf('/dev_hdd')==0) ? "usb0" : "hdd0");
+		m8.href='/copy.ps3'+p; m8.text = 'Copy to ' + ((p.indexOf('/dev_hdd')==0) ? "usb" : "hdd0");
+		m9.href='/copy_ps3'+p;
 		ms.href='http://google.com/search?q='+t.text;ms.style.display=(t.parentNode.className=='gn')?b:n;
-		y=p.indexOf('.ps3');if(y>0)p=p.substring(y+4);ml.href=p.substring(0,p.lastIndexOf("/"));
+		y=p.indexOf('.ps3');if(y>0)p=p.substring(y+4);url=window.location.href;
+		ml.href=p.substring(0,p.lastIndexOf("/"));if(url.indexOf('?sort=')<0)ml.href+='?sort=name&desc';
+		ss.href=p.substring(0,p.lastIndexOf("/"))+'?sort=size';if(url.indexOf('?sort=size')>0 && url.indexOf('&desc')<0)ss.href+='&desc';
+		sd.href=p.substring(0,p.lastIndexOf("/"))+'?sort=date';if(url.indexOf('?sort=date')>0 && url.indexOf('&desc')<0)sd.href+='&desc';
 	}
 },false);
 
 // Clear menu
-window.onclick=function(e){if(m)m.display='none';t=e.target;if(t.id.indexOf('im')==0||(typeof(t.href)=='string'&&t.href.indexOf('.ps3')>0&&t.href.indexOf('prompt')<0))wmsg.style.display='block';}
+window.onclick=function(e){if(m)m.display='none';t=e.target;if(t.id.indexOf('im')==0||(typeof(t.href)=='string'&&t.href.indexOf('.ps3')>0&&t.href.indexOf('prompt')<0&&t.href.indexOf('#Top')<0))wmsg.style.display='block';}

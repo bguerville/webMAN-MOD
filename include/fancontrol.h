@@ -1,10 +1,10 @@
-#define MIN_FANSPEED	(20)
-#define DEFAULT_MIN_FANSPEED	(25)
-#define MAX_FANSPEED	(0xF4)
-#define MAX_TEMPERATURE	(85)
-#define MY_TEMP 		(68)
+#define MIN_FANSPEED			(20) /* % */
+#define DEFAULT_MIN_FANSPEED	(25) /* % */
+#define MAX_FANSPEED			(0xF4)
+#define MAX_TEMPERATURE			(85) /* °C */
+#define MY_TEMP 				(68) /* °C */
 
-#define FAN_AUTO 		(0)
+#define FAN_AUTO 				(0)
 
 static u8 fan_speed = 0x33;
 static u8 old_fan = 0x33;
@@ -55,8 +55,9 @@ static void fan_control(u8 set_fanspeed, u8 initial)
 
 				{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-				backup[1]=peekq(set_fan_policy_offset);
-				backup[2]=peekq(get_fan_policy_offset);
+				backup[1] = peekq(set_fan_policy_offset);
+				backup[2] = peekq(get_fan_policy_offset);
+
 				lv2poke32(get_fan_policy_offset, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 				lv2poke32(set_fan_policy_offset, 0x38600001); // sys 389 set_fan_policy
 
@@ -83,7 +84,7 @@ static void fan_control(u8 set_fanspeed, u8 initial)
 			sys_sm_set_fan_policy(0, 2, fan_speed);
 			sys_timer_sleep(2);
 		}
-		old_fan=fan_speed;
+		old_fan = fan_speed;
 		sys_sm_set_fan_policy(0, 2, fan_speed);
 	}
 }
@@ -124,7 +125,7 @@ static void enable_fan_control(u8 enable, char *msg)
 	max_temp = 0;
 	if(webman_config->fanc)
 	{
-		if(webman_config->temp0 == FAN_AUTO) max_temp=webman_config->temp1;
+		if(webman_config->temp0 == FAN_AUTO) max_temp = webman_config->temp1;
 		fan_control(webman_config->temp0, 0);
 		sprintf(msg, "%s %s", STR_FANCTRL3, STR_ENABLED);
 	}

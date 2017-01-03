@@ -1,7 +1,14 @@
-#define LATEST_CFW	4.80f
+#define LATEST_CFW	4.81f
+#define CFW_420		0xA410ULL /* 42000 */
+#define MIN_CFW		0x2710ULL /* 10000 */
+#define MAX_CFW		0xD6D8ULL /* 55000 */
 
 static bool fix_in_progress = false;
 static bool fix_aborted = false;
+
+#ifdef COPY_PS3
+static u32 fixed_count = 0;
+#endif
 
 enum FIX_GAME_MODES
 {
@@ -20,9 +27,14 @@ enum SFO_Operation_Codes
 	GET_TITLE_ID_ONLY
 };
 
+static bool is_sfo(unsigned char *mem)
+{
+	return (mem[1]=='P' && mem[2]=='S' && mem[3]=='F');
+}
+
 #define READ_SFO_HEADER(ret) \
-	if(!(mem[1]=='P' && mem[2]=='S' && mem[3]=='F')) return ret; \
-	u16 pos, str, fld, dat, indx=0; \
+	if(is_sfo(mem) == false) return ret; \
+	u16 pos, str, fld, dat, indx = 0; \
 	fld=str=(mem[0x8]+(mem[0x9]<<8)); \
 	dat=pos=(mem[0xc]+(mem[0xd]<<8));
 
@@ -51,15 +63,28 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 		if(!memcmp((char *) &mem[str], "TITLE_ID", 8))
 		{
 			strncpy(titleID, (char *)mem + pos, 9);
-			fcount++; if(fcount >= 2) break;
+#ifndef ENGLISH_ONLY
+			if(*TITLE_XX == NULL)
+#endif
+				if(++fcount >= 2) break;
 		}
 		else
 		if(!memcmp((char *) &mem[str], "TITLE", 6))
 		{
 			strncpy(title, (char *)mem + pos, 63);
-			fcount++; if(fcount >= 2) break;
+#ifndef ENGLISH_ONLY
+			if(*TITLE_XX == NULL)
+#endif
+				if(++fcount >= 2) break;
 		}
-
+#ifndef ENGLISH_ONLY
+		else
+		if(!memcmp((char *) &mem[str], TITLE_XX, 9))
+		{
+			strncpy(title, (char *)mem + pos, 63);
+			if(++fcount > 2) break;
+		}
+#endif
 		READ_NEXT_SFO_FIELD()
 	}
 
@@ -104,7 +129,7 @@ static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode, u16 sfo_
 			{
 				if(opcode == SHOW_WARNING) {char text[64]; sprintf(text, "WARNING: Game requires firmware version %i.%i", (fw_ver / 10000), (fw_ver - 10000*(fw_ver / 10000)) / 100); show_msg((char*)text); break;}
 
-				mem[pos + 1] = '4'; mem[pos + 3] = '2'; mem[pos + 4] = '0'; ret = true;
+				mem[pos + 1] = '4', mem[pos + 3] = '2', mem[pos + 4] = '0'; ret = true;
 			}
 			fcount++; if(fcount>=2) break;
 		}
@@ -134,17 +159,15 @@ static void get_app_ver(unsigned char *mem, char *version, u16 sfo_size)
 
 static bool getTitleID(char *filename, char *titleID, u8 opcode)
 {
-	memset(titleID, 0, 10); int fs; bool ret = false;
+	bool ret = false;
 
-	if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+	memset(titleID, 0, 10);
+	char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
+
+	uint64_t sfo_size = read_file(filename, paramsfo, _4KB_, 0);
+
+	if(sfo_size)
 	{
-		char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
-		uint64_t sfo_size = 0;
-
-		cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &sfo_size);
-		cellFsRead(fs, (void *)&paramsfo, _4KB_, &sfo_size);
-		cellFsClose(fs);
-
 		// get titleid
 		if(opcode == GET_VERSION)
 			get_app_ver(mem, titleID, (u16)sfo_size);                 // get game version (app_ver)
@@ -155,7 +178,7 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 		{
 			ret = fix_param_sfo(mem, titleID, opcode, (u16)sfo_size); // get titleid & show warning if game needs to fix PS3_SYSTEM_VER
 
-			if(ret && opcode == FIX_SFO) savefile(filename, paramsfo, sfo_size);
+			if(ret && opcode == FIX_SFO) save_file(filename, paramsfo, sfo_size);
 		}
 	}
 	return ret;
@@ -181,7 +204,7 @@ static bool fix_sfo_attribute(unsigned char *mem, u16 sfo_size)
 	return false;
 }
 
-char fix_game_path[7][256]; int plevel = -1;
+char fix_game_path[7][256]; int plevel = NONE;
 
 static void fix_game_folder(char *path)
 {
@@ -189,7 +212,7 @@ static void fix_game_folder(char *path)
 
 	int fd;
 
-	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
+	if(working && cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
 		plevel++;
 
@@ -197,10 +220,10 @@ static void fix_game_folder(char *path)
 		sprintf(current_file, "%s", path);
 #endif
 
-		struct CellFsStat s; u16 sum;
+		struct CellFsStat s;
 		CellFsDirent dir; uint64_t read_e;
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(fix_aborted) break;
 			if(dir.d_name[0] == '.') continue;
@@ -211,9 +234,9 @@ static void fix_game_folder(char *path)
 			{
 				if(cellFsStat(fix_game_path[plevel], &s) != CELL_FS_SUCCEEDED || s.st_size < 0x500) continue;
 
-				int fdw, offset; uint64_t bytes_read = 0; char ps3_sys_version[8]; memset(ps3_sys_version, 0, 8);
+				int fdw, offset; uint64_t bytes_read = 0; u64 ps3_sys_version = 0;
 
-				cellFsChmod(fix_game_path[plevel], MODE); //fix file read-write permission
+				cellFsChmod(fix_game_path[plevel], MODE); fixed_count++; //fix file read-write permission
 
 				if(cellFsOpen(fix_game_path[plevel], CELL_FS_O_RDWR, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
@@ -223,21 +246,19 @@ static void fix_game_folder(char *path)
 				retry_offset:
 					if(offset < 0x90 || offset > 0x800) offset=!extcasecmp(dir.d_name, ".sprx", 5) ? 0x258 : 0x428;
 					cellFsLseek(fdw, offset, CELL_FS_SEEK_SET, &bytes_read);
-					cellFsRead(fdw, (void *)&ps3_sys_version, 8, &bytes_read);
+					cellFsRead(fdw, (void *)&ps3_sys_version, 8, NULL);
 
-					sum = 0; for(u8 i = 0; i < 6; i++) sum += (ps3_sys_version[i] & 0xFF);
-
-					if(offset != 0x278 && offset != 0x428 && sum != 0)
+					if(ps3_sys_version > CFW_420 && ps3_sys_version < MAX_CFW)
 					{
-						offset = (offset == 0x258) ? 0x278 : 0; goto retry_offset;
-					}
+						if(offset != 0x278 && offset != 0x428)
+						{
+							offset = (offset == 0x258) ? 0x278 : 0; goto retry_offset;
+						}
 
-					if((sum == 0) && (ps3_sys_version[6] & 0xFF)>0xA4)
-					{
-						ps3_sys_version[6]=0xA4; ps3_sys_version[7]=0x10;
+						ps3_sys_version = CFW_420;
 
 						cellFsLseek(fdw, offset, CELL_FS_SEEK_SET, &bytes_read);
-						cellFsWrite(fdw, (char*)ps3_sys_version, 8, NULL);
+						cellFsWrite(fdw, (void*)(&ps3_sys_version), 8, NULL);
 					}
 					cellFsClose(fdw);
 				}
@@ -254,26 +275,22 @@ static void fix_game_folder(char *path)
 }
 
 #ifdef COBRA_ONLY
-uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 start);
-void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update);
-
-uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 start)
+static uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 *start)
 {
-	u16 c = 0; u32 lba = 0;
-	for(u16 n = start + 0x1F; n < (n1 - n2); n++)
+	for(u16 n = *start + 0x1F; n < (n1 - n2); n++)
 	{
-		c = 0; while(s1[n + c] == s2[c] && c < n2) c++;
-		if(c == n2)
+		if(memcmp(&s1[n], s2, n2) == 0)
 		{
-			while(n > 0x1D && s1[n--]!=0x01); n-=0x1C;
-			lba = (s1[n+0] & 0xFF) + (s1[n+1] & 0xFF) * 0x100UL + (s1[n+2] & 0xFF) * 0x10000UL + (s1[n+3] & 0xFF) * 0x1000000UL;
-			start = n + 0x1C + n2; return lba;
+			while(n > 0x1D && s1[n--] != 0x01); n-=0x1C, fixed_count++;
+			u32 lba = (s1[n+0] & 0xFF) + ((s1[n+1] & 0xFF) << 8) + ((s1[n+2] & 0xFF) << 16) + ((s1[n+3] & 0xFF) << 24);
+			*start = n + 0x1C + n2;
+			return lba;
 		}
 	}
 	return 0;
 }
 
-void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
+static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 {
 	struct CellFsStat buf;
 
@@ -290,7 +307,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 	if(cellFsOpen(iso_file, CELL_FS_O_RDWR, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		uint64_t chunk_size=_4KB_; char chunk[chunk_size], ps3_sys_version[8];
+		uint64_t chunk_size=_4KB_; char chunk[chunk_size]; u64 ps3_sys_version;
 		uint64_t bytes_read = 0, lba = 0, pos=0xA000ULL;
 
 		bool fix_sfo = true, fix_eboot = true, fix_ver = false;
@@ -298,6 +315,8 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 		uint64_t size = buf.st_size;
 		if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 		if(size > pos) size -= pos; else size = 0;
+
+		u16 start, offset;
 
 		while(size > 0ULL)
 		{
@@ -308,11 +327,11 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 				cellFsLseek(fd, pos, CELL_FS_SEEK_SET, &bytes_read);
 				cellFsRead(fd, chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
-				lba = getlba(chunk, chunk_size, "PARAM.SFO;1", 11, 0);
+				start = 0, lba = getlba(chunk, chunk_size, "PARAM.SFO;1", 11, &start);
 
 				if(lba)
 				{
-					lba*=0x800ULL; fix_sfo = false;
+					lba*=0x800ULL, fix_sfo = false;
 					cellFsLseek(fd, lba, CELL_FS_SEEK_SET, &bytes_read);
 					cellFsRead(fd, (void *)&chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
@@ -331,60 +350,67 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 					}
 					else goto exit_fix; //do not fix if sfo version is ok
 
-					if(size>lba) size=lba;
+					if(size > lba) size = lba;
 
 					sprintf(chunk, "%s %s", STR_FIXING, iso_file);
 					show_msg(chunk);
 
-					lba=getlba(chunk, chunk_size, "PS3_DISC.SFB;1", 14, 0); lba*=0x800ULL; chunk_size=0x800; //1 sector
-					if(lba>0 && size>lba) size=lba;
+					start = 0, lba = getlba(chunk, chunk_size, "PS3_DISC.SFB;1", 14, &start), lba *= 0x800ULL, chunk_size = 0x800; //1 sector
+					if(lba > 0 && size > lba) size = lba;
 				}
 			}
-
-			u16 start, offset;
 
 			for(u8 t = (fix_eboot ? 0 : 1); t < 5; t++)
 			{
 				cellFsLseek(fd, pos, CELL_FS_SEEK_SET, &bytes_read);
 				cellFsRead(fd, chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
-				start=0;
+				lba = start = 0;
 
 				while(true)
 				{
 					sys_timer_usleep(1000);
 					if(fix_aborted) goto exit_fix;
 
-					if(t==0) lba = getlba(chunk, chunk_size, "EBOOT.BIN;1", 11, start);
-					if(t==1) lba = getlba(chunk, chunk_size, ".SELF;1", 7, start);
-					if(t==2) lba = getlba(chunk, chunk_size, ".self;1", 7, start);
-					if(t==3) lba = getlba(chunk, chunk_size, ".SPRX;1", 7, start);
-					if(t==4) lba = getlba(chunk, chunk_size, ".sprx;1", 7, start);
+					if(t==0) lba = getlba(chunk, chunk_size, "EBOOT.BIN;1", 11, &start);
+					if(t==1) lba = getlba(chunk, chunk_size, ".SELF;1", 7, &start);
+					if(t==2) lba = getlba(chunk, chunk_size, ".self;1", 7, &start);
+					if(t==3) lba = getlba(chunk, chunk_size, ".SPRX;1", 7, &start);
+					if(t==4) lba = getlba(chunk, chunk_size, ".sprx;1", 7, &start);
 
 					if(lba)
 					{
-						if(t==0) fix_eboot = false;
+						#define IS_EBOOT	(t == 0)
+						#define IS_SPRX		(t >= 3)
 
-						lba*=0x800ULL;
+						if(IS_EBOOT) fix_eboot = false;
+
+						lba *= 0x800ULL;
 						cellFsLseek(fd, lba, CELL_FS_SEEK_SET, &bytes_read);
 						cellFsRead(fd, (void *)&chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
-						offset=(chunk[0xC]<<24) + (chunk[0xD]<<16) + (chunk[0xE]<<8) + chunk[0xF]; offset-=0x78;
-						if(offset < 0x90 || offset > 0x800 || (chunk[offset] | chunk[offset + 1] | chunk[offset + 2] | chunk[offset + 3] | chunk[offset + 4] | chunk[offset + 5])) offset = (t > 2) ? 0x258 : 0x428;
+						memcpy(&offset, chunk + 0xC, 4); offset-=0x78;
 
-						if((t>2) && (offset == 0x258) && (chunk[offset] | chunk[offset + 1] | chunk[offset + 2] | chunk[offset + 3] | chunk[offset + 4] | chunk[offset + 5])) offset = 0x278;
-
-						for(u8 i = 0; i < 8; i++) ps3_sys_version[i] = chunk[offset+i];
-
-						if((ps3_sys_version[0] + ps3_sys_version[1] + ps3_sys_version[2] + ps3_sys_version[3] + ps3_sys_version[4] + ps3_sys_version[5]) ==0  && (ps3_sys_version[6] & 0xFF) >0xA4)
+						for(u8 retry = 0; retry < 3; retry++)
 						{
-							ps3_sys_version[6]=0XA4; ps3_sys_version[7]=0X10;
+							if(retry == 1) {if(IS_SPRX) offset = 0x258; else offset = 0x428;}
+							if(retry == 2) {if(IS_SPRX) offset = 0x278; else break;}
+
+							memcpy(&ps3_sys_version, chunk + offset, 8); if(ps3_sys_version >= MIN_CFW && ps3_sys_version < MAX_CFW) break;
+						}
+
+						if(ps3_sys_version > CFW_420 && ps3_sys_version < MAX_CFW)
+						{
+							ps3_sys_version = CFW_420;
 							cellFsLseek(fd, lba+offset, CELL_FS_SEEK_SET, &bytes_read);
-							cellFsWrite(fd, ps3_sys_version, 8, &bytes_read);
+							cellFsWrite(fd, (void*)(&ps3_sys_version), 8, NULL);
 						}
 						else goto exit_fix;
 
-						if(t == 0) break;
+						if(IS_EBOOT) break;
+
+						#undef IS_EBOOT
+						#undef IS_SPRX
 
 					} else break;
 				}
@@ -392,9 +418,9 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 			if(!bytes_read) break;
 
-			pos+=chunk_size;
-			size-=chunk_size;
-			if(chunk_size>size) chunk_size=(int) size;
+			pos  += chunk_size;
+			size -= chunk_size;
+			if(chunk_size > size) chunk_size = (int) size;
 
 			sys_timer_usleep(1000);
 		}
@@ -419,7 +445,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 	if(file_exists(game_path) || islike(game_path, "/net") || strstr(game_path, ".ntfs["))
 	{
-		fix_in_progress = true, fix_aborted = false;
+		fix_in_progress = true, fix_aborted = false, fixed_count = 0;
 
 #ifdef COBRA_ONLY
 		if(!extcasecmp(game_path, ".iso", 4) || !extcasecmp(game_path, ".iso.0", 6))
@@ -429,7 +455,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 		{
 			// -- get TitleID from PARAM.SFO
-			char filename[MAX_PATH_LEN]; int fs;
+			char filename[MAX_PATH_LEN];
 
 			char *p = strstr(game_path, "/PS3_GAME"); if(!p) p = strstr(game_path, "/USRDIR"); if(p) *p = NULL;
 
@@ -438,23 +464,20 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			else
 				sprintf(filename, "%s/PARAM.SFO", game_path);
 
-			if(file_exists(filename)==false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
-			if(file_exists(filename)==false) {waitfor("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
+			if(file_exists(filename) == false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
+			if(file_exists(filename) == false) {waitfor("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
 
-			if(cellFsOpen(filename,	CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+			char paramsfo[_4KB_]; unsigned char	*mem = (u8*)paramsfo;
+			uint64_t bytes_read = 0;
+
+			bytes_read = read_file(filename, paramsfo, _4KB_, 0);
+			if(is_sfo(mem))
 			{
-				char paramsfo[_4KB_]; unsigned char	*mem = (u8*)paramsfo;
-				uint64_t bytes_read = 0;
-
-				cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &bytes_read);
-				cellFsRead(fs, (void *)&paramsfo, _4KB_, &bytes_read);
-				cellFsClose(fs);
-
 				// fix ps3 extra or bgm + remoteplay + ps3 extra
 				char tmp_path[MAX_PATH_LEN]; sprintf(tmp_path, "%s/PS3_EXTRA", game_path); bool has_ps3_extra = isDir(tmp_path);
 				if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 				{
-					savefile(filename, paramsfo, bytes_read);
+					save_file(filename, paramsfo, bytes_read);
 				}
 
 				tmp_path[10] = NULL;
@@ -462,7 +485,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 				// get titleid & fix game folder if version is higher than cfw
 				if((fix_param_sfo(mem, titleID, FIX_SFO, (u16)bytes_read) || fix_type == FIX_GAME_FORCED) && fix_type != FIX_GAME_DISABLED && !islike(tmp_path, "/net") && !islike(tmp_path, "/dev_bdvd") && !strstr(game_path, ".ntfs["))
 				{
-					savefile(filename, paramsfo, bytes_read);
+					save_file(filename, paramsfo, bytes_read);
 
 					sprintf(filename, "%s %s", STR_FIXING, game_path);
 					show_msg(filename);
@@ -477,21 +500,18 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 				{
 					sprintf(filename, "%s%s%s/PARAM.SFO", HDD0_GAME_DIR, titleID, i ? "" : "/C00");
 
-					if(cellFsOpen(filename,	CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+					bytes_read = read_file(filename, paramsfo, _4KB_, 0);
+					if(is_sfo(mem))
 					{
-						cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &bytes_read);
-						cellFsRead(fs, (void *)&paramsfo, _4KB_, &bytes_read);
-						cellFsClose(fs);
-
 						// fix ps3 extra or bgm + remoteplay + ps3 extra
 						if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 						{
-							savefile(filename, paramsfo, bytes_read);
+							save_file(filename, paramsfo, bytes_read);
 						}
 
 						if((fix_param_sfo(mem, titleID, FIX_SFO, (u16)bytes_read) || fix_type == FIX_GAME_FORCED) && fix_type!=FIX_GAME_DISABLED)
 						{
-							savefile(filename, paramsfo, bytes_read);
+							save_file(filename, paramsfo, bytes_read);
 
 							if(i == 0) continue;
 
@@ -509,7 +529,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 		}
 
-		fix_in_progress = false;
+		fix_in_progress = false, fixed_count = 0;
 
 		if(webman_config->fixgame == FIX_GAME_FORCED) {webman_config->fixgame=FIX_GAME_QUICK; save_settings();}
 	}

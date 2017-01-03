@@ -1,5 +1,7 @@
 #ifdef PS3NET_SERVER
 
+// share *.iso & *.iso.0 stored on local file system (hdd0, usb, ms, cf, sd). JB games, ntfs & net are not shared.
+
 #define MAX_CLIENTS 3
 
 #define CLIENT_BUFFER_SIZE     (0x4000)
@@ -91,7 +93,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 	/// init result ///
 
 	netiso_open_result result;
-	result.file_size = (int64_t)(-1);
+	result.file_size = (int64_t)(NONE);
 	result.mtime = (int64_t)(0);
 
 	int fd = 0;
@@ -125,7 +127,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 
 				for(u8 i = 1; i < MAX_ISO_PARTS; i++)
 				{
-					filepath[fp_len] = 0; sprintf(filepath, "%s%i", filepath, i);
+					sprintf(filepath + fp_len, "%i", i);
 
 					if(cellFsStat(filepath, &st) != CELL_FS_SUCCEEDED) break;
 
@@ -209,7 +211,7 @@ static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *c
 			cellFsRead(clients[index].fd, &buffer, read_size, &bytes_read);
 		///////////////
 
-		if(bytes_read <= 0)
+		if(!working || (bytes_read <= 0))
 		{
 			return FAILED;
 		}
@@ -250,6 +252,8 @@ static int process_read_cd_2048_critical_cmd(u8 index, netiso_read_cd_2048_criti
 	for( ; remaining > 0; remaining--)
 	{
 		///////////////
+		if(!working) return FAILED;
+
 		if(cellFsRead(fd, &buffer, clients[index].CD_SECTOR_SIZE_2352, &bytes_read) != CELL_FS_SUCCEEDED)
 		{
 			return FAILED;
@@ -363,7 +367,7 @@ static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
 
 	if (file_exists(filepath) == false && !strstr(filepath, "/is_ps3_compat1/") && !strstr(filepath, "/is_ps3_compat2/"))
 	{
-		result.file_size = (int64_t)(-1);
+		result.file_size = (int64_t)(NONE);
 	}
 	else
 	{
@@ -449,7 +453,7 @@ static int process_open_dir_cmd(u8 index, netiso_open_dir_cmd *cmd)
 	if(isDir(dirpath) == false)
 	{
 		clients[index].dirpath[0] = NULL;
-		result.open_result = (int32_t)(-1);
+		result.open_result = (int32_t)(NONE);
 	}
 
 	/// send result ///
@@ -504,7 +508,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 
 	for(u8 i = 0; i < 16; i++)
 	{
-		if(count >= max_entries) break;
+		if(count >= max_entries || !working) break;
 
 		if(i == 7) i = NTFS + 1; // skip range from /net0 to /ext
 
@@ -516,7 +520,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 
 		dirpath_len = strlen(dirpath);
 
-		while((cellFsReaddir(dir, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(dir, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(entry.d_name[0] == '.' && (entry.d_name[1] == '.' || entry.d_name[1] == 0)) continue;
 
@@ -526,15 +530,15 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 			if(dirpath_len + d_name_len < MAX_PATH_LEN - 1)
 			{
 				sprintf(dirpath, "%s%s/%s", drives[i], clients[index].dirpath, entry.d_name);
-				st.st_size=0;
-				st.st_mode=S_IFDIR;
-				st.st_mtime=0;
-				st.st_atime=0;
-				st.st_ctime=0;
+				st.st_mode  = S_IFDIR;
+				st.st_size  = 0;
+				st.st_mtime = 0;
+				st.st_atime = 0;
+				st.st_ctime = 0;
 				cellFsStat(dirpath, &st);
 
-				if(!st.st_mtime) st.st_mtime=st.st_ctime;
-				if(!st.st_mtime) st.st_mtime=st.st_atime;
+				if(!st.st_mtime) st.st_mtime = st.st_ctime;
+				if(!st.st_mtime) st.st_mtime = st.st_atime;
 
 				if((st.st_mode & S_IFDIR) == S_IFDIR)
 				{
@@ -610,7 +614,7 @@ static void handleclient_net(uint64_t arg)
 
 	while(working)
 	{
-		if(working && (recv(clients[index].s, (void *)&cmd, sizeof(cmd), 0) > 0))
+		if(recv(clients[index].s, (void *)&cmd, sizeof(cmd), 0) > 0)
 		{
 			switch (cmd.opcode)
 			{
@@ -666,13 +670,12 @@ static void handleclient_net(uint64_t arg)
 static void netsvrd_thread(uint64_t arg)
 {
 	int list_s = FAILED;
-	if(webman_config->netp == 0) webman_config->netp = NETPORT;
 
 relisten:
-	if(working) list_s = slisten(webman_config->netp, 4);
+	if(working) list_s = slisten(webman_config->netsrvp, 4);
 	else goto end;
 
-	if(working && (list_s<0))
+	if(working && (list_s < 0))
 	{
 		sys_timer_sleep(3);
 		if(working) goto relisten;
@@ -690,7 +693,7 @@ relisten:
 			if(working && (conn_s_net = accept(list_s, NULL, NULL)) > 0)
 			{
 				// get client slot
-				int index = -1;
+				int index = NONE;
 				for(u8 i = 0; i < MAX_CLIENTS; i++) if(!clients[i].s) {index = i; break;}
 				if(index < 0) {sclose(&conn_s_net); continue;}
 
@@ -699,15 +702,15 @@ relisten:
 				clients[index].s = conn_s_net;
 
 				// handle client
-				sys_ppu_thread_t id;
-				if(working) sys_ppu_thread_create(&id, handleclient_net, (uint64_t)index, THREAD_PRIO_NET, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVRD);
+				sys_ppu_thread_t t_id;
+				if(working) sys_ppu_thread_create(&t_id, handleclient_net, (uint64_t)index, THREAD_PRIO_NET, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVRD);
 				else {sclose(&conn_s_net); break;}
 			}
 			else
-			if((sys_net_errno==SYS_NET_EBADF) || (sys_net_errno==SYS_NET_ENETDOWN))
+			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s=FAILED;
+				list_s = FAILED;
 				if(working) goto relisten;
 				else break;
 			}

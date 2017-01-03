@@ -8,11 +8,11 @@ u64 blocked_url[MAX_BLOCKED_URL][2]; u8 url_count = 0;
 
 #ifdef PS3MAPI
 
-u64 sc_backup[13];
+u64 sc_backup[14];
 
 static void backup_cfw_syscalls(void)
 {
-	for(u8 sc = 0; sc < 13; sc++)
+	for(u8 sc = 0; sc < 14; sc++)
 		sc_backup[sc] = peekq( SYSCALL_PTR(sc_disable[sc]) );
 }
 
@@ -26,7 +26,7 @@ static void restore_cfw_syscalls(void)
 
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 0); }
 
-	for(u8 sc = 0; sc < 13; sc++)
+	for(u8 sc = 0; sc < 14; sc++)
 		pokeq( SYSCALL_PTR(sc_disable[sc]), sc_backup[sc] );
 
 	//ps3mapi_key = 0;
@@ -74,17 +74,15 @@ static void remove_cfw_syscalls(bool keep_ccapi)
 
 	u64 sc_null = peekq(SYSCALL_TABLE);
 
-	get_idps_psid();
-
 	u32 initial_sc = keep_ccapi ? 4 : 0;
 
 	#ifdef COBRA_ONLY
-	for(u8 sc = initial_sc; sc < 13; sc++)
+	for(u8 sc = initial_sc; sc < 14; sc++)
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_DISABLE_SYSCALL, (u64)sc_disable[sc]); }
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 1); } // Partial disable syscall8 (Keep cobra/mamba+ps3mapi features only)
 	#endif
 
-	for(u8 sc = initial_sc; sc < 14; sc++)
+	for(u8 sc = initial_sc; sc < 15; sc++)
 		pokeq(SYSCALL_PTR( sc_disable[sc] ), sc_null);
 
 	u64 sc9  = peekq(SYSCALL_PTR( 9));
@@ -117,15 +115,11 @@ static void disable_cfw_syscalls(bool keep_ccapi)
 		char STR_RMVCFWSYS[136];//	= "History files & CFW Syscalls deleted OK!";
 		char STR_RMVCFWSYSF[80];//	= "Failed to remove CFW Syscalls";
 
-		sprintf(STR_CFWSYSRIP,   "Removal History files & CFW Syscalls in progress...");
-		sprintf(STR_RMVCFWSYS,   "History files & CFW Syscalls deleted OK!");
-		sprintf(STR_RMVCFWSYSF,  "Failed to remove CFW Syscalls");
+		language("STR_CFWSYSRIP", STR_CFWSYSRIP, "Removal History files & CFW Syscalls in progress...");
+		language("STR_RMVCFWSYS", STR_RMVCFWSYS, "History files & CFW Syscalls deleted OK!");
+		language("STR_RMVCFWSYSF", STR_RMVCFWSYSF, "Failed to remove CFW Syscalls");
 
-		language("STR_CFWSYSRIP", STR_CFWSYSRIP);
-		language("STR_RMVCFWSYS", STR_RMVCFWSYS);
-		language("STR_RMVCFWSYSF", STR_RMVCFWSYSF);
-
-		language("/CLOSEFILE", NULL);
+		language("/CLOSEFILE", NULL, NULL);
 #endif
 		show_msg((char*)STR_CFWSYSRIP);
 		remove_cfw_syscalls(keep_ccapi);
@@ -184,15 +178,15 @@ static void block_online_servers(bool notify)
 		{
 			led(YELLOW, BLINK_FAST);
 
-			u64 mem=0; u8 pcount = 0;
+			u64 mem = 0; u8 pcount = 0;
 
 			// LV1
 
-			for(u64 addr = 0x880000; addr < 0xE1FFFFULL; addr+=4)//16MB
+			for(u64 addr = 0x880000; addr < 0xE1FFFFULL; addr += 4)//16MB
 			{
 				mem = peek_lv1(addr);
 
-				if(mem      == 0x733A2F2F61757468ULL)  // s://auth
+				if(     mem == 0x733A2F2F61757468ULL)  // s://auth
 					{if(!block_url(addr,   0x733A2F2F00000000ULL)) break;}
 				else if(mem == 0x2E7073332E757064ULL)  // .ps3.upd
 					{if(!block_url(addr-8, 0x3A2F2F0000000000ULL)) break;}
@@ -205,7 +199,7 @@ static void block_online_servers(bool notify)
 			// LV2
 			u64 start_addr = 0x300000ULL + LV2_OFFSET_ON_LV1, stop_addr = 0x7FFFF8ULL + LV2_OFFSET_ON_LV1;
 
-			for(u64 addr = start_addr; addr < stop_addr; addr+=4)//8MB
+			for(u64 addr = start_addr; addr < stop_addr; addr += 4)//8MB
 			{
 				mem = peek_lv1(addr);
 				if(     mem == 0x733A2F2F6E73782EULL)   // s://nsx.

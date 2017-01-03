@@ -4,13 +4,15 @@
 #define HTML_URL				"<a href=\"%s\">%s</a>"
 #define HTML_URL2				"<a href=\"%s%s\">%s</a>"
 
+#define HTML_URL_STYLE			"color:#ccc;text-decoration:none;"
+
 #define HTML_DIR				"&lt;dir&gt;"
 #define HTML_BUTTON_FMT			"%s%s\" %s'%s';\">"
 #define HTML_BUTTON				" <input type=\"button\" value=\""
 #define HTML_ONCLICK			"onclick=\"location.href="
 #define HTML_INPUT(n, v, m, s)	"<input name=\"" n "\" type=\"text\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
 #define HTML_PASSW(n, v, m, s)	"<input name=\"" n "\" type=\"password\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
-#define HTML_NUMBER(n, v, m, s, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\" min=\"" min "\" max=\"" max "\">"
+#define HTML_NUMBER(n, v, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" min=\"" min "\" max=\"" max "\">"
 
 #define HTML_DISABLED_CHECKBOX	"1\" disabled=\"disabled"
 
@@ -34,9 +36,9 @@
 
 #define HTML_HEADER_SIZE		264
 
-#define HTTP_RESPONSE_TITLE_LEN	94 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) = 30 + 64 */
+#define HTTP_RESPONSE_TITLE_LEN	90 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) = 26 + 64 */
 
-#define HTML_RESPONSE_TITLE		"webMAN MOD " WM_VERSION "<hr><h2>" /* size: 30 */
+#define HTML_RESPONSE_TITLE		"webMAN " WM_VERSION "<hr><h2>" /* size: 26 */
 
 #define HTML_BODY				"<body bgcolor=\"#101010\" text=\"#c0c0c0\">" \
 								"<font face=\"Courier New\">" /* size: 64 */
@@ -50,16 +52,38 @@
 
 #define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},%i);</script>"
+#define HTML_REDIRECT_TO_BACK	"<script>self.location=window.history.back();</script>"
+#define HTML_CLOSE_BROWSER		"<script>window.close(this);</script>"
 #define HTML_REDIRECT_WAIT		3000
+
+#define HTML_SHOW_LAST_GAME		"<span style=\"position:absolute;right:8px\"><font size=2>"
+#define HTML_SHOW_LAST_GAME_END	"</font></span>"
 
 #define open_browser			vshmain_AE35CF2D
 
-#define  IS(a, b)				(strcmp(a, b) == 0)		// compare two strings. returns true if they are identical
-#define _IS(a, b)				(strcasecmp(a, b) == 0)	// compare two strings. returns true if they are identical (case insensitive)
+
+#define MAX(a, b)		((a) >= (b) ? (a) : (b))
+#define MIN(a, b)		((a) <= (b) ? (a) : (b))
+#define ABS(a)			(((a) < 0) ? -(a) : (a))
+#define RANGE(a, b, c)	((a) <= (b) ? (b) : (a) >= (c) ? (c) : (a))
+#define ISDIGIT(a)		('0' <= (unsigned char)(a) && (unsigned char)(a) <= '9')
+
+static bool gmobile_mode = false;
 
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
 char *strcasestr(const char *s1, const char *s2);
+
+static bool IS(const char *a, const char *b)
+{
+	while(*a && (*a == *b)) a++,b++;
+	return !(*a-*b); // compare two strings. returns true if they are identical
+}
+
+static bool _IS(const char *a, const char *b)
+{
+	return (strcasecmp(a, b) == 0);	// compare two strings. returns true if they are identical (case insensitive)
+}
 
 static size_t concat(char *dest, const char *src)
 {
@@ -74,13 +98,15 @@ static size_t concat(char *dest, const char *src)
 
 static char *to_upper(char *text)
 {
-	for(size_t i = 0; text[i]; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
-	return text;
+	char *upper = text;
+	for( ; *text; text++) if(*text >= 'a' && *text <= 'z') *text ^= 0x20;
+	return upper;
 }
 
 static bool islike(const char *param, const char *text)
 {
-	return (memcmp(param, text, strlen(text)) == 0);
+	while(*text && (*text == *param)) text++, param++;
+	return !*text;
 }
 
 static char h2a(const char hex)
@@ -93,13 +119,13 @@ static char h2a(const char hex)
 	return c;
 }
 
-static void urldec(char *url, char *original)
+static inline void urldec(char *url, char *original)
 {
 	if(strchr(url, '%'))
 	{
 		strcpy(original, url); // return original url
 
-		u16 pos = 0;
+		u16 pos = 0; char c;
 		for(u16 i = 0; url[i] >= ' '; i++, pos++)
 		{
 			if(url[i] == '+')
@@ -111,10 +137,9 @@ static void urldec(char *url, char *original)
 				url[pos] = 0; u8 n = 2;
 				while(n--)
 				{
-					url[pos] <<= 4, i++;
-					if(url[i]>='0' && url[i]<='9') url[pos] += url[i] -'0';      else
-					if(url[i]>='A' && url[i]<='F') url[pos] += url[i] -'A' + 10; else
-					if(url[i]>='a' && url[i]<='f') url[pos] += url[i] -'a' + 10;
+					url[pos] <<= 4, i++, c = (url[i] | 0x20);
+					if(c >= '0' && c <= '9') url[pos] += c -'0';      else
+					if(c >= 'a' && c <= 'f') url[pos] += c -'a' + 10;
 				}
 			}
 		}
@@ -124,11 +149,11 @@ static void urldec(char *url, char *original)
 
 static bool urlenc(char *dst, const char *src)
 {
-	size_t i, j = 0, n = strlen(src), pos = 0;
+	size_t i, j = 0, pos = 0;
 
-	if(islike(src, "http") && (src[4] == ':' || src[5] == ':') && (n > 8)) { for(i = 8; i < n; i++) if(src[i] == '/') {pos = i; break;} }
+	if(islike(src, "http") && (src[4] == ':' || src[5] == ':') && (src[6] == '/') && src[7]) { for(i = 8; src[i]; i++) if(src[i] == '/') {pos = i; break;} }
 
-	for(i = 0; i < n; i++, j++)
+	for(i = 0; src[i]; i++, j++)
 	{
 		if(src[i] & 0x80)
 		{
@@ -136,14 +161,14 @@ static bool urlenc(char *dst, const char *src)
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]=='?' || (src[i]==':' && (i >= pos)))
+		else if(src[i]=='?' || ((src[i]==':') && (i >= pos)))
 		{
 			dst[j++] = '%';
 			dst[j++] = '3';
-			dst[j] = (src[i] & 0xf) + 7;
+			dst[j] = (src[i] & 0xf) + '7'; // A | F
 		}
-		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == 0x27))
-		{
+		else if(src[i]==' ' || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
+    		{
 			dst[j++] = '%';
 			dst[j++] = '2';
 			dst[j] = (src[i] == '+') ? 'B' : '0' + (src[i] & 0xf);
@@ -152,7 +177,7 @@ static bool urlenc(char *dst, const char *src)
 	}
 	dst[j] = '\0';
 
-	return (j > n); // true if dst != src
+	return (j > i); // true if dst != src
 }
 
 static size_t htmlenc(char *dst, char *src, u8 cpy2src)
@@ -163,9 +188,7 @@ static size_t htmlenc(char *dst, char *src, u8 cpy2src)
 	{
 		if(src[i] & 0x80)
 		{
-			dst[j++] = '&';
-			dst[j++] = '#';
-			t = sprintf(tmp, "%i;", (int)(unsigned char)src[i]); c = 0;
+			t = sprintf(tmp, "&#%i;", (int)(unsigned char)src[i]); c = 0;
 			while(t--) {dst[j++] = tmp[c++];}
 		}
 		else dst[j++] = src[i];
@@ -242,13 +265,11 @@ static size_t add_check_box(const char *name, const char *value, const char *lab
 	char templn[MAX_LINE_LEN], clabel[MAX_LINE_LEN];
 	strcpy(clabel, label);
 	char *p = strstr(clabel, AUTOBOOT_PATH);
-	if(p != NULL)
+	if(p)
 	{
-		*p = NULL;
-		sprintf(templn, HTML_INPUT("autop", "%s", "255", "40"), webman_config->autoboot_path);
-		strcat(clabel, templn);
-		p = strstr(label, AUTOBOOT_PATH) + strlen(AUTOBOOT_PATH);
-		strcat(clabel, p);
+		u8 pos = p - clabel;
+		sprintf(p, HTML_INPUT("autop", "%s", "255", "40"), webman_config->autoboot_path);
+		strcat(p, label + pos + strlen(AUTOBOOT_PATH));
 	}
 	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
 	return concat(buffer, templn);
